@@ -2,13 +2,13 @@
 
 Status: planning only, no code yet
 Exchange rate used everywhere: **1 USD = 26 MVR**
-Higgsfield prices below were pulled live from Higgsfield on 13 Oct 2026 using cost quotes (`get_cost`), which return a price without generating anything. Re-check them before launch, because AI pricing changes often.
+Costs below are **Higgsfield API (developer) prices**, from [open.higgsfield.ai/pricing](https://open.higgsfield.ai/pricing) and the model pages on 13 Oct 2026. They are not the consumer web app's credit prices. Re-check them before launch, because the API currently shows a 50% discount with no stated end date.
 
 ---
 
 ## 1. The idea in one paragraph
 
-A mobile app, in Dhivehi and English, where Maldivians make TikTok-ready AI videos (mainly **Higgsfield Genjutsu** and viral effects) from a selfie or a short clip, and **pay in MVR** using local options (BML, MIB, wallet apps, or the app stores). The app never exposes your Higgsfield key. Users buy **Coins**, every template shows its Coin price up front, and your backend pays Higgsfield in credits.
+A mobile app, in Dhivehi and English, where Maldivians make TikTok-ready AI videos (mainly **Higgsfield Genjutsu** and viral effects) from a selfie or a short clip, and **pay in MVR** using local options (BML, MIB, wallet apps, or the app stores). The app never exposes your Higgsfield key. Users buy **Coins**, every template shows its Coin price up front, and your backend pays Higgsfield's pay-as-you-go API in USD.
 
 Why people would pay you instead of going to Higgsfield directly:
 
@@ -23,15 +23,15 @@ Why people would pay you instead of going to Higgsfield directly:
 
 | # | Feature (UI name) | Higgsfield engine | User provides | Notes |
 |---|---|---|---|---|
-| 1 | **Genjutsu Trending** (motion transfer) | `hf_mult_motion_control` | 1 selfie / full body photo | Your face and body perform a trending clip. This is the main product. |
-| 2 | **Genjutsu Swap** (object/outfit/character swap) | `hf_mult_replace_object` | Their own video + 1 to several reference photos | e.g. swap the bag, car, outfit or person in their clip |
-| 3 | **Genjutsu Styles** | Genjutsu Styles presets | Their own video (4 to 30 s) | Redraw their video as toy CGI, knitted yarn, 2D anime, etc. |
-| 4 | **Viral Effects** | Higgsfield Viral Hub presets | 1 photo | Vanish, Clones, Infinite Clones, Eyes In, Selfception, Street Colossus, Monster Dab, Floating Fall, World Morphing |
-| 5 | **Quick Animate** (cheap starter) | `kling3_0` image to video, 5 s | 1 photo + optional prompt | Very cheap, good free trial item |
-| 6 | **Cinematic** | `seedance_2_5`, 5 s | Photo + prompt | Higher quality general video |
-| 7 | **Local Packs** (your secret weapon) | `hf_mult_motion_control` with **your own driving videos** | 1 photo | Film 10 to 20 short local clips (boduberu, bodu mas fishing pose, dhoni, Eid greeting, Malé traffic scooter, wedding). Nobody else has these. |
+| 1 | **Genjutsu Trending** (motion transfer) | `POST /higgsfield/genjutsu/motion-transfer/v1.0` | 1 selfie / full body photo | Your face and body perform a trending clip. This is the main product. The API needs a driving video of **at least 4 s**. |
+| 2 | **Genjutsu Swap** (object/outfit/character swap) | `POST /higgsfield/genjutsu/object-swap/v1.0` | Their own video + 1 to several reference photos | e.g. swap the bag, car, outfit or person in their clip |
+| 3 | **Genjutsu Styles** | `POST /higgsfield/genjutsu/restyle/v1.0` | Their own video (4 to 30 s) | Redraw their video as toy CGI, knitted yarn, 2D anime, etc. |
+| 4 | **Viral Effects** | **Not on the API.** Higgsfield's Viral Hub presets are web-app only. Rebuild them as your own prompt recipes on Kling 3.0 / Seedance 2.5 image-to-video. | 1 photo | Vanish, Clones, Eyes In, Giant, Monster reveal, etc. Your own recipes, tested until they look good |
+| 5 | **Quick Animate** (cheap starter) | `POST /kling-video/v3.0/std/image-to-video`, 5 s | 1 photo + optional prompt | Very cheap, good free trial item |
+| 6 | **Cinematic** | Seedance 2.5 image to video, 720p, 5 s | Photo + prompt | Higher quality general video |
+| 7 | **Local Packs** (your secret weapon) | Genjutsu motion transfer with **your own driving videos** | 1 photo | Film 10 to 20 short local clips (boduberu, bodu mas fishing pose, dhoni, Eid greeting, Malé traffic scooter, wedding). Nobody else has these. |
 
-Trending Genjutsu templates seen in the live catalog right now, for reference: Unboxed Item Swap, Rug Transition Swap, Night Fuel Drive, Supercar Showreel Spin, Urban Style Rotation, Ceiling Fan Transition, Arcade Identity Swap, Orbital Room Sweep, Coastal Tower Assembly, Studio Duo Exchange, Luxury Bag Swap, Boutique Terrace Dance, Convertible Head Bob, Influencer Rhythm Recap. The catalog refreshes, so the app should sync it from your backend rather than hard-coding it.
+Trending Genjutsu templates seen in the live catalog right now, for reference: Unboxed Item Swap, Rug Transition Swap, Night Fuel Drive, Supercar Showreel Spin, Urban Style Rotation, Ceiling Fan Transition, Arcade Identity Swap, Orbital Room Sweep, Coastal Tower Assembly, Studio Duo Exchange, Luxury Bag Swap, Boutique Terrace Dance, Convertible Head Bob, Influencer Rhythm Recap. **API note:** the web app's Trending gallery is not part of the API. With the API you supply the driving video yourself, so your "Trending" tab is clips you film or license (for example, local TikTokers recreating the trends, paid per clip or by revenue share). Do not reuse other creators' clips from Higgsfield's community gallery without permission. Store templates in your own database so you can add them without an app update.
 
 ---
 
@@ -55,10 +55,10 @@ Trending Genjutsu templates seen in the live catalog right now, for reference: U
 1. User opens a template (e.g. "Boutique Terrace Dance") and sees the **price in Coins** and a preview.
 2. User uploads a selfie. The app compresses it and uploads it straight to your storage via a signed URL.
 3. Backend runs **moderation** on the photo (face present, no nudity, no minors in swap features, no public-figure faces).
-4. Backend asks Higgsfield for a **live cost quote** (`get_cost: true`). If the credit cost is higher than what the template's Coin price covers (for example, Higgsfield raised prices), the job is blocked and you get an alert, so you never sell at a loss.
+4. Backend computes the **exact API cost**: input video seconds (rounded up) × the per-second rate for that resolution, read from a `rates` table you update when Higgsfield changes prices. If the margin would fall below 35% (for example, because the launch discount ended), the job is blocked and you get an alert, so you never sell at a loss.
 5. Backend places a **hold** on the user's Coins (not a charge yet) and submits the job.
-6. A worker polls Higgsfield (or receives a webhook) until the job finishes, then copies the video to your storage.
-7. On success the hold becomes a charge. **On failure the Coins are automatically released.** Users never pay for failed jobs.
+6. Higgsfield calls your **webhook** when the job finishes (polling is the fallback). The worker copies the video to your storage straight away, because Higgsfield only keeps outputs for 7 days.
+7. On success the hold becomes a charge. **On failure the Coins are automatically released.** Users never pay for failed jobs, and neither do you: the API does not charge for failed, timed-out or NSFW-blocked requests.
 8. Push notification: "Your video is ready". User previews, saves to their gallery, or shares to TikTok.
 9. Results are kept for 30 days, then deleted (saves storage cost and protects privacy).
 
@@ -80,8 +80,9 @@ Trending Genjutsu templates seen in the live catalog right now, for reference: U
 - `wallets` (user_id, balance_coins, held_coins)
 - `ledger` (id, user_id, type `topup|hold|charge|release|refund|bonus`, coins, ref, created_at). This is append-only and your source of truth for money.
 - `topups` (id, user_id, channel `bml|mib|wallet|apple|google`, amount_mvr, coins, status, gateway_ref)
-- `templates` (id, feature, higgsfield_ref, title_en, title_dv, preview_url, duration_s, resolution, credit_cost, coin_price, active, sort)
-- `jobs` (id, user_id, template_id, status, credits_quoted, coins_held, higgsfield_job_id, result_url, error, created_at)
+- `rates` (endpoint, resolution, usd_per_second, valid_from). One row per Higgsfield price; update it when Higgsfield changes prices and every template's cost updates with it.
+- `templates` (id, feature, endpoint, driving_video_url, title_en, title_dv, preview_url, duration_s, resolution, coin_price, coin_price_plan_b, active, sort)
+- `jobs` (id, user_id, template_id, status, api_cost_usd, coins_held, higgsfield_request_id, result_url, error, created_at)
 - `moderation_events`
 
 Security rule that matters most: **the Higgsfield API key lives only on the server.** It never goes inside the app, because anyone can extract keys from an APK.
@@ -123,52 +124,51 @@ Security rule that matters most: **the Higgsfield API key lives only on the serv
 
 ---
 
-## 5. Higgsfield costs (live quotes, 13 Oct 2026)
+## 5. Higgsfield API costs (13 Oct 2026)
 
-### 5.1 Credit cost per generation
+The API is **pay-as-you-go in USD**: you top up a balance, each generation deducts its cost, and spending stops at zero. There is no subscription. Sources: [pricing page](https://open.higgsfield.ai/pricing), [Genjutsu motion transfer](https://open.higgsfield.ai/models/higgsfield/genjutsu/motion-transfer/v1.0), [object swap](https://open.higgsfield.ai/models/higgsfield/genjutsu/object-swap/v1.0), [restyle](https://open.higgsfield.ai/models/higgsfield/genjutsu/restyle/v1.0), [Kling 3.0 Standard](https://open.higgsfield.ai/models/kling-video/v3.0/std/image-to-video), [Seedance 2.5](https://open.higgsfield.ai/models/bytedance/seedance-2.5/text-to-video), [API FAQ](https://docs.higgsfield.ai/docs/help/faq.md), [Higgsfield API blog](https://higgsfield.ai/blog/higgsfield-api).
 
-Genjutsu is billed **per second of output, rounded up**. A 6.79 s driving clip was quoted as 7 seconds:
+### 5.1 Genjutsu: per second of the INPUT video, rounded up
 
-| Engine | Resolution | Credits per second | 7 s clip | 10 s clip | 15 s clip |
-|---|---|---|---|---|---|
-| Genjutsu (motion transfer or swap) | 480p | 3 | 21 | 30 | 45 |
-| Genjutsu | 720p | 7 | 49 | 70 | 105 |
-| Genjutsu | 1080p | 11 | 77 | 110 | 165 |
-| Kling 3.0 image to video | 5 s, 9:16 | n/a | 8.75 for 5 s | | |
-| Seedance 2.5 | 5 s, 9:16 | n/a | 35 for 5 s | | |
+Motion transfer, object swap and restyle all cost the same. The pricing page currently shows **50% off** ("from $0.159/s"), with no stated conditions or end date. Treat it as a launch offer that can end any day.
 
-Motion transfer and object swap cost the same (49 credits for 7 s at 720p in both cases). Viral Effects and Genjutsu Styles did not return a quote without real user media, so their prices must be set from a live quote during setup (the pricing engine does this automatically).
-
-### 5.2 What a credit costs you
-
-| Source | USD | Price per credit | MVR per credit |
-|---|---|---|---|
-| Ultra plan, annual | 99 / month for 3,000 cr | $0.0330 | 0.858 |
-| Plus plan, annual | 39 / month for 1,000 cr | $0.0390 | 1.014 |
-| Top-up / auto-refill | 18 credits per $1 | $0.0556 | 1.444 |
-| **Planning rate used in this document** | | **$0.050** | **1.300** |
-
-Why plan at $0.05: once you sell more than about 60 HD videos a month, you will be past your plan's credits and buying top-ups at $0.0556. The planning rate sits between the plan rates and the top-up rate, so the prices hold up at scale. Top-up credits expire after **90 days**, so do not over-buy.
-
-### 5.3 Your cost per video in MVR (at the 26 rate)
-
-| Product | Credits | Best case (Ultra annual) | Planning rate | Worst case (top-up) |
+| Resolution | List price | Current price (50% off) | Current, in MVR | List, in MVR |
 |---|---|---|---|---|
-| Quick Animate (Kling, 5 s) | 8.75 | MVR 7.5 | MVR 11.4 | MVR 12.6 |
-| Genjutsu Lite 480p, 7 s | 21 | MVR 18.0 | MVR 27.3 | MVR 30.3 |
-| Genjutsu HD 720p, 7 s | 49 | MVR 42.0 | MVR 63.7 | MVR 70.8 |
-| Genjutsu Full HD 1080p, 7 s | 77 | MVR 66.1 | MVR 100.1 | MVR 111.2 |
-| Genjutsu HD 720p, 10 s | 70 | MVR 60.1 | MVR 91.0 | MVR 101.1 |
-| Genjutsu HD 720p, 15 s | 105 | MVR 90.1 | MVR 136.5 | MVR 151.7 |
-| Cinematic (Seedance 2.5, 5 s) | 35 | MVR 30.0 | MVR 45.5 | MVR 50.6 |
+| 480p | $0.318 / s | $0.159 / s | **MVR 4.13 / s** | MVR 8.27 / s |
+| 720p | $0.681 / s | $0.3405 / s | **MVR 8.85 / s** | MVR 17.71 / s |
+| 1080p | $1.632 / s | $0.816 / s | **MVR 21.22 / s** | MVR 42.43 / s |
 
-### 5.4 Important: confirm you are allowed to resell
+### 5.2 Your cost per video in MVR
 
-The quotes above come from Higgsfield's regular credit system. Before launch:
+| Product | Current API cost | If the discount ends (list) |
+|---|---|---|
+| Genjutsu 480p, 7 s | MVR 28.9 | MVR 57.9 |
+| Genjutsu 720p, 7 s | MVR 62.0 | MVR 123.9 |
+| Genjutsu 1080p, 7 s | MVR 148.5 | MVR 297.0 |
+| Genjutsu 720p, 10 s | MVR 88.5 | MVR 177.1 |
+| Genjutsu 720p, 15 s | MVR 132.8 | MVR 265.6 |
+| Quick Animate: Kling 3.0 Standard, 5 s ($0.042 to $0.063 / s now, $0.084 to $0.126 / s list) | MVR 5.5 to 8.2 | MVR 10.9 to 16.4 |
+| Cinematic: Seedance 2.5, 720p, 5 s (about $0.32 / s now, $0.46 / s list) | MVR 42.1 | MVR 60.1 |
 
-- Read Higgsfield's **API / developer terms** and confirm that using their API to serve **your own paying customers** is allowed. Consumer plans are often personal use only.
-- Check whether the **API dashboard has its own per-call pricing** (it may be different from the consumer plan credits used here) and whether volume discounts are available. Email their sales team. At a few thousand videos a month you have leverage.
-- Ask about **webhooks**, **rate limits** and **concurrency** (consumer plans run 6 to 8 videos at a time, which is too few at peak times like the night before Eid).
+### 5.3 How this compares with the web app credits I checked first
+
+| Genjutsu 720p, 7 s | Cost |
+|---|---|
+| Web app, Ultra plan credits (49 credits × $0.033) | $1.62 = MVR 42 |
+| **API today (50% off)** | **$2.38 = MVR 62** |
+| API at list price | $4.77 = MVR 124 |
+
+The API costs more than the web app's credits, and 1080p on the API costs about 2.7 times as much. But the API is the right way to build a product: it is built for apps, explicitly allows **commercial use** of outputs, refunds failures, has webhooks, and scales. A consumer subscription is for one person's own use, so do not build the app on it.
+
+### 5.4 Other API facts that matter for the plan
+
+- **Concurrency** (how many videos render at once) depends on how much you topped up in the last 28 days: 2 by default, **10 at $25+, 20 at $100+, 40 at $1,000+**, higher by contacting sales. The night before Eid you will want at least 20.
+- **Top-up funds expire 1 year** after they are added (much better than the web app's 90 days).
+- **Failed, timed-out and NSFW-blocked requests are not charged.**
+- **Outputs are only kept 7 days**, so copy them to your own storage.
+- **Not available on the API:** the Viral Hub effects and the web app's Trending gallery. You build those yourself (see section 2).
+- **Committed-use contracts** with invoice billing are available through [sales](https://open.higgsfield.ai/contact-sales). Ask them to **lock in the current 50%-off rate** for a volume commitment. That is the single biggest lever on your margins.
+- **Reselling:** commercial use of outputs is allowed, but the pages do not explicitly address building a consumer app that resells generations. Confirm by email before launch.
 
 ---
 
@@ -178,9 +178,10 @@ The quotes above come from Higgsfield's regular credit system. Before launch:
 
 - **1 Coin = MVR 1** on the base pack. That makes it easy for users to understand.
 - Bigger packs give bonus coins.
-- Each template shows a fixed Coin price, worked out automatically by the backend:
-  `coin_price ≈ credit_cost × MVR 1.30 × 2.0, rounded to a friendly number ending in 9`
-  The ×2.0 markup covers payment fees, failed or retried jobs (about 8%), the free trial and bonus coins, and still leaves roughly **40 to 55% gross margin**. The backend refuses to run a job whose live quote would push margin below 35%, so you are protected if Higgsfield raises prices.
+- Each template shows a fixed Coin price, worked out by the backend from the rates table:
+  `coin_price ≈ API cost in MVR × 2.0, rounded to a friendly number ending in 9`
+  The ×2.0 markup covers payment fees, bonus coins and the free trial, and leaves about **50% gross margin** (around 40% on the biggest bonus pack). Failed jobs cost you nothing on the API, so no retry buffer is needed beyond about 3% for user "remakes".
+- **The discount trap:** 2 × today's discounted cost is exactly Higgsfield's list price. If the discount ends and you have not changed your prices, **your margin drops to about zero**. So keep two price lists ready (6.3) and let the backend's 35% margin guard switch to Plan B automatically if the rates table changes.
 
 ### 6.2 Coin packs
 
@@ -204,75 +205,88 @@ The quotes above come from Higgsfield's regular credit system. Before launch:
 
 ### 6.3 Recommended MVR price list (every feature)
 
-1 Coin = MVR 1, so the Coin price **is** the MVR price on the base web pack. "Your cost" uses the planning rate (MVR 1.30 per credit). Margin is shown for the base web pack.
+1 Coin = MVR 1, so the Coin price **is** the MVR price on the base web pack.
 
-**A. Genjutsu Trending and Local Packs** (selfie → you perform the clip). Fixed price per template, based on its clip length:
+**A. Genjutsu Trending and Local Packs** (selfie → you perform the clip). Fixed price per template, based on its clip length. The API needs at least 4 s, so the shortest tier is "up to 5 s".
+
+Launch prices (while the 50% API discount lasts), about 50% margin:
 
 | Clip length | Lite 480p | HD 720p | Full HD 1080p |
 |---|---|---|---|
-| up to 7 s | **MVR 59** (cost 27.3, 54%) | **MVR 129** (cost 63.7, 51%) | **MVR 199** (cost 100.1, 50%) |
-| up to 10 s | **MVR 79** (cost 39.0, 51%) | **MVR 179** (cost 91.0, 49%) | **MVR 289** (cost 143.0, 51%) |
-| up to 15 s | **MVR 119** (cost 58.5, 51%) | **MVR 279** (cost 136.5, 51%) | **MVR 429** (cost 214.5, 50%) |
+| up to 5 s | **MVR 49** | **MVR 89** | **MVR 219** |
+| up to 7 s | **MVR 59** | **MVR 129** | **MVR 299** |
+| up to 10 s | **MVR 89** | **MVR 179** | **MVR 429** |
+| up to 15 s | **MVR 129** | **MVR 269** | **MVR 639** |
 
-**B. Genjutsu Swap** (swap an object, outfit or person in *your* video). Same engine and cost as Trending, so the same table as A applies. Because the user brings their own video, the app shows the price after upload using the per-second rates below (minimum 4 s, maximum 15 s).
+Plan B prices (if the discount ends), about 38% margin at list price:
 
-**C. Genjutsu Styles** (restyle *your* video as toy CGI, anime, knitted yarn, etc.). Priced per second of the user's video, minimum 4 s, maximum 30 s:
-
-| Quality | Price per second | 5 s video | 10 s video | 15 s video |
-|---|---|---|---|---|
-| Lite 480p | **MVR 8 / s** | MVR 40 | MVR 80 | MVR 120 |
-| HD 720p | **MVR 18 / s** | MVR 90 | MVR 180 | MVR 270 |
-| Full HD 1080p | **MVR 29 / s** | MVR 145 | MVR 290 | MVR 435 |
-
-(Estimate: Higgsfield did not return a Styles quote without a real user video. These rates assume Styles bills like Genjutsu (3 / 7 / 11 credits per second). Confirm with one live quote during Phase 0, and the backend's 35% margin guard covers you in the meantime.)
-
-**D. Viral Effects** (Vanish, Clones, Eyes In, Selfception, Street Colossus, Monster Dab, etc.; photo → video):
-
-| Quality | Price | Assumed cost |
-|---|---|---|
-| HD 720p | **MVR 99** | up to 35 credits (MVR 45.5), 54% margin |
-| Full HD 1080p | **MVR 149** | up to 52 credits (MVR 67.6), 55% margin |
-
-(Estimate: each effect is a chain of an image step plus a video step, and Higgsfield only quotes it with a real photo. Any effect whose live quote is above these limits automatically moves up a price tier.)
-
-**E. Other generators**
-
-| Product | Price | Your cost | Margin |
+| Clip length | Lite 480p | HD 720p | Full HD 1080p |
 |---|---|---|---|
-| Quick Animate 5 s (Kling 3.0) | **MVR 29** | MVR 11.4 | 61% |
-| Cinematic 5 s (Seedance 2.5) | **MVR 99** | MVR 45.5 | 54% |
-| "Remake in HD" (after a Lite result) | HD price minus MVR 20 loyalty discount, e.g. **MVR 109** for 7 s | MVR 63.7 | 42% |
+| up to 5 s | MVR 69 | MVR 149 | MVR 349 |
+| up to 7 s | MVR 99 | MVR 199 | MVR 479 |
+| up to 10 s | MVR 139 | MVR 289 | MVR 679 |
+| up to 15 s | MVR 199 | MVR 429 | MVR 1,019 |
 
-**F. Wallet products** (from 6.2 and 6.5): Coin packs **MVR 100 / 250 / 500 / 1,000** on the web, **≈ MVR 130 / 312 / 598 / 1,170** in-app, and **Creator Pass MVR 499 / month**.
+Recommendation: launch with **Lite and HD only**, and keep templates **5 to 7 seconds** (that is TikTok's sweet spot anyway). 1080p is very expensive on the API, so offer it later as a "Pro" option, or only after you have a volume deal.
 
-Margins on the biggest bonus pack (where 1 Coin is worth about MVR 0.83) drop about 10 points, to roughly 39 to 46%. In-app purchases end up slightly *better* than web after the store's cut, because the IAP packs are priced higher.
+**B. Genjutsu Swap and C. Genjutsu Styles** (the user brings their own video). Same engine price as A, charged per second of the user's video (minimum 4 s, maximum 15 s for Swap and 30 s for Styles). The app shows the price right after upload.
 
-Positioning: **Genjutsu Lite at 59** is the "impulse buy" for TikTok trends. HD and Full HD are upsells for people who want sharper results. A good UX pattern is to generate in Lite, and if the user loves it, offer "Remake in HD" (a new generation, charged at the HD price).
+| Quality | Launch, per second | e.g. 10 s | Plan B, per second |
+|---|---|---|---|
+| Lite 480p | **MVR 9 / s** | MVR 90 | MVR 14 / s |
+| HD 720p | **MVR 18 / s** | MVR 180 | MVR 29 / s |
+| Full HD 1080p | **MVR 43 / s** | MVR 430 | MVR 69 / s |
+
+**D. Viral Effects** (your own effect recipes on Kling 3.0 / Seedance, since the Viral Hub is not on the API):
+
+| Version | Price | Your cost now | Cost at list |
+|---|---|---|---|
+| Effect on Kling 3.0, 5 s | **MVR 49** | about MVR 8 to 15 | about MVR 16 to 30 |
+| Premium effect on Seedance 2.5 720p, 5 s | **MVR 129** | MVR 42.1 | MVR 60.1 |
+
+These prices hold even if the discount ends (40%+ margin at list).
+
+**E. Other generators** (these prices also hold at list price)
+
+| Product | Price | Your cost now | Cost at list |
+|---|---|---|---|
+| Quick Animate, Kling 3.0 Standard 5 s | **MVR 29** | MVR 5.5 to 8.2 | MVR 10.9 to 16.4 |
+| Cinematic, Seedance 2.5 720p 5 s | **MVR 99** | MVR 42.1 | MVR 60.1 |
+| "Remake in HD" after a Lite result (7 s) | **MVR 109** | MVR 62.0 | MVR 123.9 (move to MVR 179 under Plan B) |
+
+**F. Wallet products:** Coin packs **MVR 100 / 250 / 500 / 1,000** on the web, **≈ MVR 130 / 312 / 598 / 1,170** in-app, and **Creator Pass MVR 499 / month** (6.5).
+
+Margins on the biggest bonus pack (where 1 Coin is worth about MVR 0.83) are about 10 points lower. In-app purchases end up slightly *better* than web after the store's cut, because the IAP packs are priced higher.
+
+Positioning: **Genjutsu Lite at 59** is the "impulse buy" for TikTok trends. HD is the upsell for people who want sharper results. A good UX pattern is to generate in Lite, and if the user loves it, offer "Remake in HD" (a new generation at a small discount).
 
 ### 6.4 Free trial and promotions
 
-- **On signup (phone verified):** 1 free Quick Animate (costs you about MVR 11) with a small watermark. Avoid giving a free Genjutsu HD (MVR 64 each). That gets expensive quickly with fake accounts.
+- **On signup (phone verified):** 1 free Quick Animate (costs you about MVR 8) with a small watermark. Avoid giving a free Genjutsu HD (MVR 62 each). That gets expensive quickly with fake accounts.
 - **Referral:** both people get 30 Coins after the friend's first top-up (not just signup).
 - **Seasonal packs:** Eid al-Fitr, Eid al-Adha, Independence Day (26 July), school holidays. Launch new Local Pack templates for each.
 - **Watermark:** free and trial outputs carry a small "made with [App]" mark (free marketing on TikTok). Paid outputs are clean.
 
 ### 6.5 Optional subscription (Phase 3)
 
-**Creator Pass: MVR 499 / month** = 600 Coins + no watermark + priority queue + early access to new Local Packs. At planning cost, a fully used pass still leaves roughly 45% margin, and many subscribers will not use all of it.
+**Creator Pass: MVR 499 / month** = 600 Coins + no watermark + priority queue + early access to new Local Packs. Only launch it once you know whether the API discount is staying, because the pass locks in a price for a month at a time.
 
 ---
 
-## 7. Monthly profit scenarios
+## 7. Monthly profit scenarios (API pricing)
 
-Assumed mix: 45% Lite, 30% HD, 15% Quick Animate, 5% Full HD, 5% Cinematic. Average revenue of MVR 0.90 per Coin (bonus packs), an 8% failure and retry buffer on API cost, 3% payment fees, and **MVR 4,000 a month in fixed costs** (Supabase, Railway, storage, SMS OTP, Apple developer fee spread monthly, domain).
+Assumed mix: 45% Lite 7 s, 30% HD 7 s, 15% Quick Animate, 5% Full HD 7 s, 5% Cinematic. Average revenue of MVR 0.90 per Coin (bonus packs), 3% remake buffer, 3% payment fees, and **MVR 4,000 a month in fixed costs**.
 
-| Videos / month | Revenue | Higgsfield cost | Fees | Fixed | **Profit before tax** | Credits needed |
-|---|---|---|---|---|---|---|
-| 500 | MVR 38,025 | MVR 21,806 | MVR 1,141 | MVR 4,000 | **MVR 11,078** | ~16,800 |
-| 2,000 | MVR 152,100 | MVR 87,224 | MVR 4,563 | MVR 4,000 | **MVR 56,313** | ~67,100 |
-| 5,000 | MVR 380,250 | MVR 218,059 | MVR 11,408 | MVR 4,000 | **MVR 146,784** | ~167,700 |
+| Videos / month | Scenario | Revenue | Higgsfield API | Fees | Fixed | **Profit before tax** | API top-up needed |
+|---|---|---|---|---|---|---|---|
+| 500 | Launch prices, discount on | MVR 40,275 | MVR 21,818 | MVR 1,208 | MVR 4,000 | **MVR 13,249** | ~$840 |
+| 500 | Plan B prices, discount ended | MVR 61,875 | MVR 43,023 | MVR 1,856 | MVR 4,000 | **MVR 12,996** | ~$1,655 |
+| 2,000 | Launch prices, discount on | MVR 161,100 | MVR 87,272 | MVR 4,833 | MVR 4,000 | **MVR 64,995** | ~$3,360 |
+| 2,000 | Plan B prices, discount ended | MVR 247,500 | MVR 172,092 | MVR 7,425 | MVR 4,000 | **MVR 63,983** | ~$6,620 |
+| 5,000 | Launch prices, discount on | MVR 402,750 | MVR 218,180 | MVR 12,082 | MVR 4,000 | **MVR 168,488** | ~$8,390 |
+| 5,000 | Plan B prices, discount ended | MVR 618,750 | MVR 430,231 | MVR 18,562 | MVR 4,000 | **MVR 165,956** | ~$16,550 |
 
-Break-even on fixed costs is only about **70 HD videos a month**. The real risks are not costs but (a) Higgsfield raising prices (the pricing engine protects you) and (b) user acquisition. Development cost (your time or a freelancer) and GST are not included above.
+Plan B assumes the same number of videos at higher prices, which is optimistic, since some users will buy less. Two real risks follow. First, **cash flow**: you prepay Higgsfield in USD before users pay you, so at 2,000 videos a month you need about $3,400 to $6,600 of float. Second, **the discount ending**: lock it in with a committed-use deal if you can. Development cost and GST are not included above.
 
 ---
 
@@ -315,7 +329,7 @@ A note on running the business itself: Islam puts real weight on honest trade. T
 
 | Phase | Weeks | Deliverables |
 |---|---|---|
-| **0. Validate** | 1 to 2 | Confirm Higgsfield reseller/API terms and pricing. Register business, apply to BML/MIB gateways. Run 30 test generations on Maldivian faces and skin tones (about 1,500 credits ≈ $75 ≈ MVR 1,950) to check quality. Pick a launch set of 20 templates. Film 10 local driving clips. |
+| **0. Validate** | 1 to 2 | Confirm Higgsfield reseller/API terms and pricing. Register business, apply to BML/MIB gateways. Run 30 test generations on Maldivian faces and skin tones (30 × Genjutsu 720p 7 s at $2.38 ≈ $72 ≈ MVR 1,860) to check quality. Pick a launch set of 20 templates. Film 10 local driving clips. |
 | **1. MVP (Android first)** | 3 to 8 | Flutter app with Dhivehi/English and RTL, phone OTP login, Genjutsu Trending + Lite/HD, Quick Animate, wallet + web top-up (BML), job queue with auto refunds, push notifications, save/share, moderation v1, admin panel (templates, refunds, users). Closed beta with 50 to 100 TikTok creators. |
 | **2. Launch** | 9 to 12 | iOS app with Apple IAP, Google Play Billing, Genjutsu Swap and Styles, Viral Effects, Local Packs, referral system, watermark logic. Launch campaign with local TikTokers. |
 | **3. Grow** | 13+ | Creator Pass subscription, direct TikTok posting (TikTok Content Posting API, needs their app review), B2B packs for shops and resorts (product videos, ads), seasonal Eid/Ramadan packs, volume pricing deal with Higgsfield. |
@@ -326,11 +340,11 @@ A note on running the business itself: Islam puts real weight on honest trade. T
 |---|---|---|
 | Apple Developer Program (yearly) | 99 | 2,574 |
 | Google Play (one time) | 25 | 650 |
-| Test credits (Phase 0) | 75 | 1,950 |
-| Starting credit float (Ultra annual month) | 99 | 2,574 |
+| API test generations (Phase 0) | 75 | 1,950 |
+| First API top-up ($100 also unlocks 20 concurrent videos) | 100 | 2,600 |
 | Backend + storage, first 3 months | ~150 | ~3,900 |
 | Business registration, gateway setup | varies | varies |
-| **Approximate total** | **~450** | **~11,650** |
+| **Approximate total** | **~450** | **~11,700** |
 
 ---
 
@@ -351,4 +365,5 @@ A note on running the business itself: Islam puts real weight on honest trade. T
 2. Launch Android-only first (faster, most Maldivian phones) or both platforms together?
 3. Which payment gateway to apply to first: BML or MIB?
 4. Do you film your own Local Pack driving videos, or partner with local TikTokers (revenue share per use)?
-5. Your Higgsfield API plan: confirm the exact per-call pricing and terms so the tables in section 5 can be updated with the real API numbers.
+5. Email Higgsfield sales: (a) confirm a consumer app reselling Genjutsu generations is allowed, (b) ask how long the 50% discount lasts, and (c) ask for a committed-use deal that locks it in.
+6. Viral Effects: build your own Kling/Seedance recipes for launch, or skip them until Higgsfield exposes effects on the API?
