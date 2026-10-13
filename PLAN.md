@@ -33,6 +33,31 @@ Why people would pay you instead of going to Higgsfield directly:
 
 Trending Genjutsu templates seen in the live catalog right now, for reference: Unboxed Item Swap, Rug Transition Swap, Night Fuel Drive, Supercar Showreel Spin, Urban Style Rotation, Ceiling Fan Transition, Arcade Identity Swap, Orbital Room Sweep, Coastal Tower Assembly, Studio Duo Exchange, Luxury Bag Swap, Boutique Terrace Dance, Convertible Head Bob, Influencer Rhythm Recap. **API note:** the web app's Trending gallery is not part of the API. With the API you supply the driving video yourself, so your "Trending" tab is clips you film or license (for example, local TikTokers recreating the trends, paid per clip or by revenue share). Do not reuse other creators' clips from Higgsfield's community gallery without permission. Store templates in your own database so you can add them without an app update.
 
+### 2.1 Engine choice: Genjutsu vs. Kling 3.0 Motion Control
+
+**What Genjutsu is:** Higgsfield's own video-to-video model, launched about 31 Aug 2026. Higgsfield has **not disclosed** what it is built on (in-house or on top of a third-party model). It takes one 4 to 30 s video plus up to about 30 reference images, keeps the original motion, camera and timing, and rebuilds or swaps parts of the scene. Its three modes are motion transfer, object swap and restyle, at up to 1080p.
+
+**The cheaper alternative for most TikTok trends:** **Kling 3.0 Motion Control** (Kuaishou), sold on the **same Higgsfield API**, with the same account and billing. It does one thing: copy one performer's body movement and expressions from a 3 to 30 s video onto one character photo. You can choose whether the character faces the way the photo or the video does, and optionally keep the original sound. That is exactly the "my selfie does this dance/trend" use case.
+
+| Engine (Higgsfield API) | Price / s now | Price / s list | 7 s clip now | 7 s clip at list | Best for |
+|---|---|---|---|---|---|
+| Genjutsu 480p | $0.159 | $0.318 | MVR 28.9 | MVR 57.9 | Multi-person scenes, rebuilding the whole scene, many references |
+| Genjutsu 720p | $0.3405 | $0.681 | MVR 62.0 | MVR 123.9 | Same, sharper |
+| Genjutsu 1080p | $0.816 | $1.632 | MVR 148.5 | MVR 297.0 | Premium only |
+| **Kling 3.0 Motion Control Standard** | **$0.063** | $0.126 | **MVR 11.5** | MVR 22.9 | Single-person dances and trends |
+| **Kling 3.0 Motion Control Pro** | **$0.084** | about $0.168 | **MVR 15.3** | about MVR 30.6 | Single-person, higher quality |
+| Kling 2.6 Motion Control Std / Pro | $0.035 / $0.056 | | MVR 6.4 / 10.2 | | Budget fallback (older model) |
+| Wan 2.2 Animate (open source; fal.ai about $0.08 / s at 720p, third-party figure) | | | about MVR 14.6 | | Self-hosting later, if you have GPU skills |
+
+Kling Motion Control Pro is about **4 times cheaper than Genjutsu 720p**, and stays that way at list prices. Comparisons by others say Kling is strongest at body movement and **face consistency** for a single performer, but weaker with several people in the frame, and very fast motion can produce a shorter output. Genjutsu is stronger when the whole scene or several subjects need rebuilding, and it is the only one that also does object swap and restyle.
+
+**Recommendation: use both, chosen per template.**
+- **Single-person dance and trend templates (most of TikTok, most Local Packs) → Kling 3.0 Motion Control.** Much cheaper, so you can sell them at MVR 39 to 49 (see 6.3 E2).
+- **Multi-person, scene-rebuild, swap and restyle templates → Genjutsu**, sold as the premium tier.
+- In Phase 0, run the **same 10 clips with Maldivian faces through both engines** (about $30) and compare face likeness, skin tone, hands and hijab/clothing accuracy before choosing a default. Users only see the template, so you can switch a template's engine later without changing the app.
+
+Sources: [Higgsfield Genjutsu announcement](https://higgsfield.ai/blog/higgsfield-genjutsu), [Kling 3.0 Motion Control on Higgsfield API](https://open.higgsfield.ai/models/kling-video/v3/motion-control/std), [Kling Motion Control API schema](https://docs.higgsfield.ai/docs/models/kling-3-motion-control/pro.md), [Kapwing: Genjutsu alternatives](https://www.kapwing.com/resources/5-best-higgsfield-genjutsu-alternatives-in-2026/), [Wan 2.2 Animate guide](https://aireiter.com/blog/wan2-2-animate-guide).
+
 ---
 
 ## 3. How it works (architecture)
@@ -253,6 +278,16 @@ These prices hold even if the discount ends (40%+ margin at list).
 | Quick Animate, Kling 3.0 Standard 5 s | **MVR 29** | MVR 5.5 to 8.2 | MVR 10.9 to 16.4 |
 | Cinematic, Seedance 2.5 720p 5 s | **MVR 99** | MVR 42.1 | MVR 60.1 |
 | "Remake in HD" after a Lite result (7 s) | **MVR 109** | MVR 62.0 | MVR 123.9 (move to MVR 179 under Plan B) |
+
+**E2. Trend Dance (Kling 3.0 Motion Control, single person).** These prices hold even if the discount ends:
+
+| Clip length | Standard | Pro |
+|---|---|---|
+| up to 7 s | **MVR 39** (cost now 11.5, list 22.9) | **MVR 49** (cost now 15.3, list about 30.6) |
+| up to 10 s | **MVR 49** (cost now 16.4, list 32.8) | **MVR 69** (cost now 21.8, list about 43.7) |
+| up to 15 s | **MVR 79** (cost now 24.6, list 49.1) | **MVR 99** (cost now 32.8, list about 65.5) |
+
+Margin is about 64 to 71% today and about 33 to 41% at list price. If Kling holds up in your Phase 0 tests, **Trend Dance at MVR 39 to 49 becomes your main product**, and Genjutsu (from MVR 59) becomes the premium tier.
 
 **F. Wallet products:** Coin packs **MVR 100 / 250 / 500 / 1,000** on the web, **≈ MVR 130 / 312 / 598 / 1,170** in-app, and **Creator Pass MVR 499 / month** (6.5).
 
