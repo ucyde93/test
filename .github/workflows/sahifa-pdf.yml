@@ -31,7 +31,7 @@ jobs:
           cache: npm
           cache-dependency-path: sahifa-pdf/package-lock.json
       - run: npm ci
-      - name: End-to-end tests (real Electron app under a virtual display)
+      - name: Security unit tests and end-to-end tests (real Electron app under a virtual display)
         run: xvfb-run -a npm test
 
   build:
@@ -59,6 +59,7 @@ jobs:
           path: |
             sahifa-pdf/dist/*.exe
             sahifa-pdf/dist/*.dmg
+            sahifa-pdf/dist/*.zip
             sahifa-pdf/dist/*.AppImage
           if-no-files-found: error
 

@@ -1,6 +1,6 @@
 {
   "name": "sahifa-pdf",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Sahifa PDF",
   "main": "main.js",
   "scripts": {
@@ -123,21 +123,37 @@
             "x64",
             "arm64"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "category": "public.app-category.productivity",
       "icon": "build/icon.png",
       "identity": null,
       "artifactName": "Sahifa-PDF-${version}-${arch}.${ext}",
-      "fileAssociations": [
-        {
-          "ext": "pdf",
-          "name": "PDF Document",
-          "description": "PDF Document",
-          "mimeType": "application/pdf",
-          "role": "Editor"
-        }
-      ]
+      "minimumSystemVersion": "11.0",
+      "extendInfo": {
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "PDF Document",
+            "CFBundleTypeRole": "Editor",
+            "LSHandlerRank": "Default",
+            "LSItemContentTypes": [
+              "com.adobe.pdf"
+            ],
+            "CFBundleTypeExtensions": [
+              "pdf"
+            ],
+            "CFBundleTypeIconFile": "icon.icns"
+          }
+        ],
+        "NSHumanReadableCopyright": "© 2026 MV Digital Tools"
+      }
     },
     "linux": {
       "target": [
@@ -162,6 +178,27 @@
     "publish": null,
     "extraMetadata": {
       "productName": "Sahifa PDF"
+    },
+    "afterPack": "build/afterPack.js",
+    "dmg": {
+      "title": "Sahifa PDF ${version}",
+      "contents": [
+        {
+          "x": 150,
+          "y": 190,
+          "type": "file"
+        },
+        {
+          "x": 400,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 550,
+        "height": 380
+      }
     }
   },
   "repository": {

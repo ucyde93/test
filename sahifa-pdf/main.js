@@ -40,6 +40,8 @@ function openPaths(paths) {
     win.focus();
   } else {
     pendingPaths.push(...paths);
+    // macOS keeps the app running after its window is closed; reopen it for the file.
+    if (!win && app.isReady()) createWindow();
   }
 }
 

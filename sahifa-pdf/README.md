@@ -17,6 +17,7 @@ The interface uses a light "liquid glass" design: frosted translucent panels ove
 | **Edit** | Edit existing text (click a line, type the new text; font, size and color are matched), add text in any language including Arabic, add images, white-out, watermarks, page numbers / header & footer, crop pages, document title/author/keywords, attach files |
 | **Fill & Sign** | Fill PDF forms (text, checkboxes, radio buttons, dropdowns, lists), create new form fields, signatures and initials you can **type** (4 handwriting styles), **draw** or **upload** (paper background removed automatically), saved for reuse, check/cross/dot marks, date stamp, flatten |
 | **Signatures & seals library** | Save any number of signatures and initials (named, with a default), design company seals (round or rectangular rubber-stamp style with curved company name, center text, automatic date and ink texture), add a seal from a photo or scan of your real stamp, save custom text stamps, place any of them with one click, and export/import the library to move it between computers or share it with colleagues |
+| **Privacy & PIN lock** | The library is always encrypted on disk, and an optional 6 to 12 digit PIN locks it with AES-256. Auto-lock when idle, when the screen locks or the computer sleeps, rate-limited PIN attempts, optional erase after 10 wrong PINs, and password-protected backups (see below) |
 | **Digital IDs** | Certificate-based signatures (PKCS#7, the same kind Adobe uses). Create your own digital ID or import a `.pfx`/`.p12` from your organization; optional visible signature box |
 | **Organize** | Drag-and-drop page reordering, rotate, delete, duplicate, insert blank pages, insert/merge other PDFs, images to PDF, extract pages, split by page count or ranges |
 | **Protect** | AES-256 password encryption with permissions (printing, copying, editing…), open password-protected PDFs, **true redaction** (marked content is removed from the file, not just covered), remove hidden information (metadata, scripts, attachments) |
@@ -30,7 +31,12 @@ Undo/redo covers every change. Your edits stay editable until you close the docu
 Installers are built automatically by GitHub Actions for every change (see the **Actions** tab → *Sahifa PDF* → *Artifacts*). Pushing a tag such as `sahifa-v1.0.0` publishes them as a GitHub Release.
 
 - **Windows:** `Sahifa-PDF-Setup-x.y.z.exe` is a standard installation wizard (license page, choice of folder, Start Menu folder *MV Digital Tools*, desktop shortcut, uninstaller in *Apps & features*). `Sahifa-PDF-Portable-x.y.z.exe` runs without installing. The files are not code-signed yet, so Windows SmartScreen may show *More info → Run anyway* until you sign them with a code-signing certificate.
-- **macOS:** `Sahifa-PDF-x.y.z-arm64.dmg` (Apple Silicon) or `-x64.dmg` (Intel). The app is not notarized with Apple, so the first time right-click the app → **Open**.
+- **macOS 11 Big Sur or newer:** `Sahifa-PDF-x.y.z-arm64` for Apple Silicon (M1, M2, M3, M4…) or `-x64` for Intel Macs, as `.dmg` or `.zip` (Apple menu → *About This Mac* shows which chip you have).
+  1. Open the `.dmg` and drag **Sahifa PDF** into **Applications** (or double-click the `.zip` and drag the app into **Applications**).
+  2. Open it from Applications. The app is signed (ad-hoc) but not notarized with Apple, so the first time macOS says it cannot verify the developer. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. On macOS 14 and older you can instead right-click the app → **Open** → **Open**. This is needed only once.
+  3. The first time you save a signature, macOS may ask to let Sahifa PDF use its key in your Keychain. Choose **Always Allow**.
+
+  Advanced alternative to step 2: `xattr -dr com.apple.quarantine "/Applications/Sahifa PDF.app"` in Terminal.
 - **Linux:** `Sahifa-PDF-x.y.z.AppImage`. Make it executable (`chmod +x`) and run it.
 
 ### Default PDF app
@@ -49,6 +55,21 @@ npm install
 npm start                 # run the app
 npm run dist              # build an installer for the current system into dist/
 ```
+
+macOS builds are ad-hoc signed by `build/afterPack.js` (Apple Silicon Macs refuse unsigned apps). On a Mac this happens automatically; to build the Mac `.zip` from Linux, download [rcodesign](https://github.com/indygreg/apple-platform-rs/releases) and run `RCODESIGN=/path/to/rcodesign npx electron-builder --mac zip --x64 --arm64`. A `.dmg` needs a Mac. With a paid Apple Developer ID, set `CSC_LINK`/`CSC_KEY_PASSWORD` (and notarization credentials) to sign and notarize instead, which removes the first-launch warning.
+
+## Privacy and security of your signatures and seals
+
+Your saved signatures, initials, seals and stamps never leave your computer.
+
+- **Always encrypted on disk.** The library file is encrypted with your operating system's own protection (Windows DPAPI, macOS Keychain, Linux Secret Service/KWallet). A copy of the file is unreadable on another computer or another user account.
+- **PIN lock (recommended).** In *Sign → My library → Privacy & PIN* (or *Tools → Signatures & Seals Privacy*), set a 6 to 12 digit PIN. The library is then encrypted with AES-256-GCM using a random key, and that key is protected by your PIN through scrypt, a deliberately slow, memory-hard function (about one second per guess). The PIN itself is never stored anywhere.
+- **Brute-force protection.** After 5 wrong PINs the app makes you wait 30 seconds, then the wait doubles with every further wrong PIN (up to one hour). You can also choose to **erase the library after 10 wrong PINs**.
+- **Auto-lock.** The library locks after a period of inactivity you choose (1 minute to 1 hour, or only when you close the app; default 5 minutes), when you lock the screen, when the computer sleeps, when the window closes, and on *Lock now* (Ctrl/Cmd+Shift+L). While locked, no signature or key is kept in memory.
+- **Private backups.** *Export* creates a backup protected by a password you choose (required when a PIN is set), so the file can be moved safely between computers.
+- **Forgotten PIN.** There is no back door and no recovery, not even for MV Digital Tools. You can erase the library and start again, or restore a password-protected backup.
+
+Signatures that you already placed in a PDF and saved are part of that PDF and are not affected by the PIN.
 
 ## Keyboard shortcuts
 
@@ -79,6 +100,8 @@ On macOS use Cmd instead of Ctrl.
 sahifa-pdf/
 ├── main.js              Electron main process: windows, menus, files, digital IDs
 ├── lib/default-app.js   "Make default PDF app" for Windows, macOS and Linux
+├── lib/secure-library.js Encrypted signatures & seals library, PIN lock
+├── build/afterPack.js   Ad-hoc code signing for macOS builds
 ├── build/installer.nsh  Windows installer registration (Default apps, Open with)
 ├── preload.js           Safe bridge between the window and the main process
 ├── lib/digital-sign.js  Digital ID creation and PKCS#7 signing (node-forge, @signpdf)
@@ -90,10 +113,11 @@ sahifa-pdf/
 │   ├── js/library.js    Signatures & seals library, seal designer, quick picker
 │   ├── js/organize.js   Page organizer
 │   └── js/app.js        Ribbon, tabs, sidebar, commands, shortcuts
+├── test/secure-library.test.js  Security tests for the encrypted library
 └── test/e2e.js          End-to-end test that drives the real app
 ```
 
-`npm test` launches the real app, clicks through every major feature and checks the saved PDFs with pdf.js, pdf-lib and OpenSSL. On Linux without a display, run `xvfb-run -a npm test`.
+`npm test` runs the security tests, then launches the real app, clicks through every major feature and checks the saved PDFs with pdf.js, pdf-lib and OpenSSL. On Linux without a display, run `xvfb-run -a npm test`.
 
 Built on free, open-source software: [Electron](https://www.electronjs.org), [pdf.js](https://mozilla.github.io/pdf.js/) (Mozilla), [pdf-lib](https://github.com/cantoo-scribe/pdf-lib), [node-forge](https://github.com/digitalbazaar/forge), [@signpdf](https://github.com/vbuch/node-signpdf) and signature fonts from the Google Fonts library (OFL).
 

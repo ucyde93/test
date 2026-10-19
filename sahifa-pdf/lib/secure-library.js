@@ -89,7 +89,9 @@ class SecureLibrary {
     if (raw.os) {
       if (!this.ss) throw new LibraryError('OS_UNAVAILABLE', 'This library is protected by your computer account and cannot be opened here.');
       try { text = this.ss.decryptString(Buffer.from(raw.body, 'base64')); } catch {
-        throw new LibraryError('OS_UNAVAILABLE', 'This library was locked by another computer or user account.');
+        throw new LibraryError('OS_UNAVAILABLE', process.platform === 'darwin'
+          ? 'Sahifa PDF could not use its key in your Keychain. If macOS asked for permission, choose "Always Allow" and try again.'
+          : 'This library was locked by another computer or user account.');
       }
     }
     return { protection: raw.protection || 'none', inner: JSON.parse(text), os: !!raw.os };
