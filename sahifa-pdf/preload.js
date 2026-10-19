@@ -23,4 +23,10 @@ contextBridge.exposeInMainWorld('sahifaHost', {
   onMenu: (cb) => ipcRenderer.on('menu', (_e, cmd, arg) => cb(cmd, arg)),
   onOpenPaths: (cb) => ipcRenderer.on('open-paths', (_e, paths) => cb(paths)),
   rendererReady: () => ipcRenderer.send('renderer-ready'),
+  defaultStatus: () => ipcRenderer.invoke('default-status'),
+  makeDefault: (opts) => ipcRenderer.invoke('default-set', opts),
+  openDefaultSettings: () => ipcRenderer.invoke('default-settings'),
+  onDefaultStatus: (cb) => ipcRenderer.on('default-status', (_e, st) => cb(st)),
+  setChrome: (theme) => ipcRenderer.send('set-chrome', theme),
+  popupMenu: (x, y) => ipcRenderer.send('menu-popup', { x, y }),
 });

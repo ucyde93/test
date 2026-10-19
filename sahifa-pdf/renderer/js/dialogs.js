@@ -680,10 +680,16 @@ async function shortcutsDialog() {
 async function aboutDialog() {
   const info = await Host.appInfo();
   await dialog({
-    title: 'About Sahifa PDF',
-    content: el('div', { class: 'stack' },
-      el('p', { class: 'dlg-text' }, `Version ${info.version}. A free PDF reader and editor that works completely offline. No accounts, no subscriptions, no tracking, and no AI.`),
-      el('p', { class: 'dlg-text muted' }, 'Built with Electron, Mozilla pdf.js, pdf-lib, node-forge and @signpdf. Signature fonts from the Google Fonts open font library.')),
+    title: 'About',
+    width: 440,
+    className: 'dlg-welcome',
+    content: el('div', { class: 'welcome-hero' },
+      el('img', { src: '../build/icon.png', alt: '', class: 'welcome-icon' }),
+      el('h3', {}, 'Sahifa PDF'),
+      el('p', { class: 'muted' }, `Version ${info.version}`),
+      el('div', { class: 'about-company' }, el('img', { src: 'assets/mv-digital-tools.svg', alt: '' }), el('span', {}, 'A product of ', el('strong', {}, 'MV Digital Tools'))),
+      el('p', {}, 'A free PDF reader and editor that works completely offline. No accounts, no subscriptions, no tracking.'),
+      el('p', { class: 'fld-hint' }, '© 2026 MV Digital Tools. Built with Electron, Mozilla pdf.js, pdf-lib, node-forge and @signpdf.')),
     buttons: [{ label: 'Close', value: true, kind: 'primary' }],
   });
 }

@@ -1,137 +1,7 @@
 'use strict';
-/* Application shell: document tabs, ribbon, sidebar, status bar and commands. */
+/* Documents, commands, sidebar panels and keyboard handling. Layout lives in shell.js. */
 
-const App = { docs: [], active: null, ribbonTab: settingsGet('ribbonTab', 'home'), sidebarTab: 'thumbs', sidebarOpen: settingsGet('sidebar', true) };
-
-// ---------- ribbon ----------
-const T = (tool, label, iconName, key) => ({ tool, label, icon: iconName, key });
-const C = (cmd, label, iconName, title) => ({ cmd, label, icon: iconName, title });
-const RIBBON = {
-  home: [
-    ['File', [C('open', 'Open', 'open'), C('save', 'Save', 'save'), C('save-as', 'Save As', 'saveAs'), C('print', 'Print', 'print')]],
-    ['History', [C('undo', 'Undo', 'undo'), C('redo', 'Redo', 'redo')]],
-    ['Tools', [T('select', 'Select', 'select', 'V'), T('hand', 'Hand', 'hand', 'H'), C('find', 'Find', 'search')]],
-    ['View', [C('zoom-out', 'Zoom out', 'zoomOut'), C('zoom-in', 'Zoom in', 'zoomIn'), C('zoom-width', 'Fit width', 'fitWidth'), C('zoom-page', 'Fit page', 'fitPage'), C('night', 'Night', 'night', 'Night reading mode'), C('read-aloud', 'Read aloud', 'speaker'), C('present', 'Present', 'present')]],
-    ['Document', [C('properties', 'Properties', 'info'), C('organize', 'Organize', 'organize')]],
-  ],
-  comment: [
-    ['Markup', [T('highlight', 'Highlight', 'highlight', 'U'), T('underline', 'Underline', 'underline'), T('strike', 'Strikeout', 'strike')]],
-    ['Comment', [T('note', 'Sticky note', 'note', 'N'), T('text', 'Text box', 'text', 'T')]],
-    ['Draw', [T('pen', 'Pen', 'pen', 'P'), T('rect', 'Rectangle', 'rect', 'R'), T('ellipse', 'Ellipse', 'ellipse'), T('line', 'Line', 'line'), T('arrow', 'Arrow', 'arrow')]],
-    ['Stamp', [C('stamp', 'Stamp', 'stamp')]],
-  ],
-  edit: [
-    ['Text', [T('edittext', 'Edit text', 'editText', 'E'), T('text', 'Add text', 'text')]],
-    ['Insert', [C('image', 'Image', 'image'), T('whiteout', 'White-out', 'whiteout')]],
-    ['Page', [C('watermark', 'Watermark', 'watermark'), C('header-footer', 'Numbers', 'pageNumbers', 'Page numbers, header & footer'), T('crop', 'Crop', 'crop')]],
-    ['Forms', [T('field-text', 'Text field', 'fieldText'), T('field-multiline', 'Text area', 'dropdown'), T('field-check', 'Checkbox', 'fieldCheck')]],
-    ['File', [C('metadata', 'Info', 'info', 'Document title, author, keywords'), C('attach', 'Attach', 'attach', 'Attach a file')]],
-  ],
-  sign: [
-    ['Sign', [C('sign', 'Signature', 'sign'), C('initials', 'Initials', 'initials'), C('digital-sign', 'Digital ID', 'certificate', 'Sign with a certificate')]],
-    ['Fill', [T('text', 'Text', 'text'), T('date', 'Date', 'date'), T('check', 'Check', 'check'), T('cross', 'Cross', 'cross'), T('dot', 'Dot', 'dot')]],
-    ['Finish', [C('save-flat', 'Flatten', 'layers', 'Save a copy with form fields and edits merged into the pages')]],
-  ],
-  organize: [
-    ['Pages', [C('organize', 'Organize', 'organize'), C('rotate-ccw', 'Rotate left', 'rotateCcw'), C('rotate-cw', 'Rotate right', 'rotateCw'), C('delete-page', 'Delete', 'trash'), C('duplicate-page', 'Duplicate', 'copy')]],
-    ['Insert', [C('insert-blank', 'Blank page', 'blank'), C('insert-pdf', 'Merge PDF', 'merge'), C('insert-images', 'Images', 'images')]],
-    ['Split', [C('extract', 'Extract', 'extract'), C('split', 'Split', 'split'), T('crop', 'Crop', 'crop')]],
-  ],
-  protect: [
-    ['Password', [C('protect', 'Encrypt', 'lock', 'Protect with a password')]],
-    ['Redact', [T('redact', 'Mark', 'redact', 'Mark content for redaction'), C('apply-redactions', 'Apply', 'shield', 'Permanently remove marked content')]],
-    ['Privacy', [C('sanitize', 'Remove hidden', 'sanitize', 'Remove metadata, scripts and attachments')]],
-    ['Certificate', [C('digital-sign', 'Sign', 'certificate', 'Sign with a digital ID'), C('digital-ids', 'My IDs', 'key', 'Manage digital IDs')]],
-  ],
-  convert: [
-    ['Export', [C('export-images', 'To images', 'exportImage'), C('export-text', 'To text', 'textFile'), C('extract', 'Extract pages', 'extract')]],
-    ['Create', [C('new-from-images', 'From images', 'images'), C('new-blank', 'Blank PDF', 'blank'), C('merge-files', 'Merge files', 'merge')]],
-  ],
-};
-const RIBBON_TABS = [['home', 'Home'], ['comment', 'Comment'], ['edit', 'Edit'], ['sign', 'Fill & Sign'], ['organize', 'Organize'], ['protect', 'Protect'], ['convert', 'Convert']];
-const NEEDS_DOC = (cmd) => !['open', 'new-from-images', 'new-blank', 'merge-files', 'shortcuts', 'about', 'theme', 'digital-ids'].includes(cmd);
-
-function renderRibbon() {
-  const nav = $('#ribbonNav');
-  nav.innerHTML = '';
-  for (const [k, label] of RIBBON_TABS) {
-    nav.append(el('button', { class: 'rn-tab' + (k === App.ribbonTab ? ' on' : ''), role: 'tab', 'aria-selected': k === App.ribbonTab ? 'true' : 'false', onclick: () => { App.ribbonTab = k; settingsSet('ribbonTab', k); renderRibbon(); } }, label));
-  }
-  const rb = $('#ribbon');
-  rb.innerHTML = '';
-  const hasDoc = !!App.active;
-  for (const [gname, items] of RIBBON[App.ribbonTab]) {
-    const g = el('div', { class: 'rb-group' });
-    const row = el('div', { class: 'rb-row' });
-    for (const it of items) {
-      const disabled = it.tool ? !hasDoc : (!hasDoc && NEEDS_DOC(it.cmd));
-      const b = el('button', {
-        class: 'tb-btn' + (it.tool && Annotations.tool === it.tool && hasDoc ? ' on' : ''),
-        title: (it.title || it.label) + (it.key ? ` (${it.key})` : ''),
-        disabled,
-        dataset: it.tool ? { tool: it.tool } : { cmd: it.cmd },
-        onclick: () => (it.tool ? (Annotations.tool === it.tool && it.tool !== 'select' ? setTool('select') : setTool(it.tool)) : App.run(it.cmd)),
-      }, icon(it.icon, 20), el('span', {}, it.label));
-      row.append(b);
-    }
-    g.append(row, el('div', { class: 'rb-label' }, gname));
-    rb.append(g);
-  }
-}
-
-// ---------- tabs ----------
-function renderDocTabs() {
-  const bar = $('#docTabs');
-  bar.innerHTML = '';
-  for (const d of App.docs) {
-    const tab = el('div', { class: 'doc-tab' + (d === App.active ? ' on' : ''), role: 'tab', title: d.path || d.name, 'aria-selected': d === App.active ? 'true' : 'false' },
-      el('button', { class: 'doc-tab-name', onclick: () => activate(d) }, d.dirty ? el('span', { class: 'dirty-dot', 'aria-label': 'Unsaved changes' }) : null, d.name),
-      el('button', { class: 'doc-tab-x', 'aria-label': `Close ${d.name}`, onclick: () => closeDoc(d) }, icon('close', 14)));
-    bar.append(tab);
-  }
-  if (App.docs.length) bar.append(el('button', { class: 'doc-tab-add', title: 'Open another PDF', 'aria-label': 'Open', onclick: () => App.run('open') }, icon('plus', 16)));
-}
-
-function updateTitle() {
-  const d = App.active;
-  Host.setTitle(d ? `${d.dirty ? '• ' : ''}${d.name} — Sahifa PDF` : 'Sahifa PDF');
-  Host.setDirty(App.docs.some((x) => x.dirty));
-}
-
-function showWelcome(show) {
-  $('#welcome').hidden = !show;
-  $('#viewer').hidden = show || Organizer.open;
-  $('#organizer').hidden = show || !Organizer.open;
-  document.body.classList.toggle('no-doc', show);
-}
-
-function activate(doc) {
-  if (Annotations.editing) finishTextEdit();
-  if (App.active && App.active !== doc) App.active.scrollTop = viewerEl().scrollTop;
-  if (Organizer.open) closeOrganizer();
-  App.active = doc;
-  Annotations.selected = null;
-  Search.hits = [];
-  Search.index = -1;
-  if (doc) {
-    showWelcome(false);
-    Viewer.doc = doc;
-    renderSidebar();
-    mountDoc(doc);
-    setTool(Annotations.tool === 'select' || Annotations.tool === 'hand' ? Annotations.tool : 'select');
-  } else {
-    Viewer.doc = null;
-    $('#pages').innerHTML = '';
-    showWelcome(true);
-    renderRecent();
-  }
-  renderDocTabs();
-  renderRibbon();
-  renderSidebar();
-  renderStatus();
-  renderBanner();
-  updateTitle();
-}
+const App = { docs: [], active: null, home: true, mode: settingsGet('mode', 'view'), sidebarTab: 'thumbs', sidebarOpen: settingsGet('sidebar', true) };
 
 async function addDoc(doc) {
   App.docs.push(doc);
@@ -182,18 +52,6 @@ async function openPaths(paths) {
     try { files.push(await Host.readFile(p)); } catch (e) { toast(`Could not read ${p}`, 'error'); }
   }
   await openFiles(files);
-}
-
-async function renderRecent() {
-  const box = $('#recentList');
-  if (!box) return;
-  const list = await Host.recentGet();
-  box.innerHTML = '';
-  $('#recentWrap').hidden = !list.length;
-  for (const p of list) {
-    const name = p.split(/[\\/]/).pop();
-    box.append(el('li', {}, el('button', { class: 'recent-item', title: p, onclick: () => openPaths([p]) }, icon('layers', 16), el('span', { class: 'recent-name' }, name), el('span', { class: 'recent-path' }, p))));
-  }
 }
 
 // ---------- saving ----------
@@ -458,7 +316,7 @@ App.run = async (cmd) => {
       case 'zoom-actual': return setZoom('custom', 1);
       case 'zoom-width': return setZoom('width');
       case 'zoom-page': return setZoom('page');
-      case 'toggle-sidebar': App.sidebarOpen = !App.sidebarOpen; settingsSet('sidebar', App.sidebarOpen); renderSidebar(); return;
+      case 'toggle-sidebar': App.sidebarOpen = !App.sidebarOpen; settingsSet('sidebar', App.sidebarOpen); renderSidebar(); renderRail(); return;
       case 'organize': return Organizer.open ? closeOrganizer(orgTargets()[0]) : openOrganizer();
       case 'night': Viewer.night = !Viewer.night; viewerEl().classList.toggle('night', Viewer.night); settingsSet('night', Viewer.night); return;
       case 'theme': {
@@ -472,6 +330,8 @@ App.run = async (cmd) => {
       case 'present': return togglePresent();
       case 'properties': return propertiesDialog(doc);
       case 'shortcuts': return shortcutsDialog();
+      case 'make-default': return makeDefaultFlow();
+      case 'home': return showHome();
       case 'about': return aboutDialog();
       case 'sign':
       case 'initials': {
@@ -816,19 +676,6 @@ function renderSearchResults() {
   });
 }
 
-// ---------- status bar & banners ----------
-function renderStatus() {
-  const doc = App.active;
-  $('#statusbar').classList.toggle('disabled', !doc);
-  $('#pageInput').value = doc ? Viewer.current + 1 : '';
-  $('#pageCount').textContent = doc ? `of ${doc.pageCount}` : '';
-  $('#zoomLabel').textContent = doc ? Math.round(Viewer.scale * 100) + '%' : '';
-  $('#docState').textContent = doc ? (doc.dirty ? 'Unsaved changes' : doc.path ? 'Saved' : '') : '';
-  $$('.thumb.on').forEach((t) => t.classList.remove('on'));
-  const th = $(`.thumb[data-index="${Viewer.current}"]`);
-  if (th) { th.classList.add('on'); const p = $('#sidePanel'); if (th.offsetTop < p.scrollTop || th.offsetTop > p.scrollTop + p.clientHeight - 60) p.scrollTop = th.offsetTop - 80; }
-}
-
 function renderBanner() {
   const b = $('#banner');
   b.innerHTML = '';
@@ -845,15 +692,6 @@ function renderBanner() {
     b.append(el('div', { class: `banner banner-${kind}` }, icon(kind === 'warn' ? 'warning' : 'info', 16), el('span', {}, text),
       action ? el('button', { class: 'btn btn-ghost', onclick: action[1] }, action[0]) : null));
   }
-}
-
-// ---------- theme ----------
-function applyTheme(mode) {
-  if (mode === 'system') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = mode;
-  settingsSet('theme', mode);
-  const btn = $('#themeBtn');
-  if (btn) { btn.innerHTML = ''; btn.append(icon(mode === 'dark' ? 'moon' : mode === 'light' ? 'sun' : 'night', 18)); btn.title = `Theme: ${mode}`; }
 }
 
 // ---------- keyboard ----------
@@ -885,65 +723,6 @@ function onKeyDown(e) {
     if (e.key === 'Home') { e.preventDefault(); goToPage(0); return; }
     if (e.key === 'End') { e.preventDefault(); goToPage(App.active.pageCount - 1); }
   }
-}
-
-// ---------- boot ----------
-function buildStatusbar() {
-  const pageInput = $('#pageInput');
-  pageInput.addEventListener('change', () => { const n = parseInt(pageInput.value, 10); if (n) goToPage(n - 1); });
-  pageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') pageInput.blur(); e.stopPropagation(); });
-  const sb = (id, ic, title, fn) => { const b = $(id); b.append(icon(ic, 16)); b.title = title; b.setAttribute('aria-label', title); b.addEventListener('click', fn); };
-  sb('#sbSidebar', 'sidebar', 'Show or hide sidebar (F4)', () => App.run('toggle-sidebar'));
-  sb('#sbFirst', 'first', 'First page', () => goToPage(0));
-  sb('#sbPrev', 'chevLeft', 'Previous page', () => goToPage(Viewer.current - 1));
-  sb('#sbNext', 'chevRight', 'Next page', () => goToPage(Viewer.current + 1));
-  sb('#sbLast', 'last', 'Last page', () => goToPage(App.active.pageCount - 1));
-  sb('#sbZoomOut', 'zoomOut', 'Zoom out', () => App.run('zoom-out'));
-  sb('#sbZoomIn', 'zoomIn', 'Zoom in', () => App.run('zoom-in'));
-  sb('#sbFitWidth', 'fitWidth', 'Fit width', () => App.run('zoom-width'));
-  sb('#sbFitPage', 'fitPage', 'Fit page', () => App.run('zoom-page'));
-  sb('#sbNight', 'night', 'Night reading mode', () => App.run('night'));
-  const zl = $('#zoomLabel');
-  zl.addEventListener('click', async () => {
-    const pct = el('input', { type: 'number', class: 'inp', min: 10, max: 800, value: Math.round(Viewer.scale * 100) });
-    const v = await dialog({ title: 'Zoom', width: 300, content: field('Zoom (%)', pct), buttons: [{ label: 'Cancel', value: null }, { label: 'Apply', kind: 'primary', value: () => +pct.value }] });
-    if (v) setZoom('custom', clamp(v / 100, 0.1, 8));
-  });
-}
-
-function buildTopbar() {
-  const f = $('#findInput');
-  const go = debounce(() => runSearch(f.value), 280);
-  f.addEventListener('input', () => { if (App.active) go(); });
-  f.addEventListener('keydown', (e) => {
-    e.stopPropagation();
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (Search.query !== f.value) runSearch(f.value);
-      else focusHit(Search.index + (e.shiftKey ? -1 : 1));
-    }
-    if (e.key === 'Escape') { f.value = ''; runSearch(''); f.blur(); }
-  });
-  f.addEventListener('focus', () => { if (App.active && App.sidebarTab !== 'search') { App.sidebarTab = 'search'; App.sidebarOpen = true; renderSidebar(); } });
-  $('#findPrev').append(icon('chevUp', 14));
-  $('#findNext').append(icon('chevDown', 14));
-  $('#findPrev').addEventListener('click', () => focusHit(Search.index - 1));
-  $('#findNext').addEventListener('click', () => focusHit(Search.index + 1));
-  $('#searchIcon').append(icon('search', 16));
-  $('#themeBtn').addEventListener('click', () => App.run('theme'));
-  $('#helpBtn').append(icon('keyboard', 18));
-  $('#helpBtn').addEventListener('click', () => App.run('shortcuts'));
-}
-
-function buildWelcome() {
-  $('#wOpen').prepend(icon('open', 20));
-  $('#wOpen').addEventListener('click', () => App.run('open'));
-  const quick = [
-    ['merge-files', 'Merge PDFs', 'merge'], ['new-from-images', 'Images to PDF', 'images'], ['new-blank', 'Blank PDF', 'blank'],
-  ];
-  const q = $('#wQuick');
-  for (const [cmd, label, ic] of quick) q.append(el('button', { class: 'w-quick', onclick: () => App.run(cmd) }, icon(ic, 18), label));
-  if (!Host.isDesktop) $('#wDesktopNote').hidden = false;
 }
 
 function setupDragDrop() {
@@ -1017,20 +796,4 @@ function wireEvents() {
   Host.onOpenPaths((paths) => openPaths(paths));
 }
 
-async function boot() {
-  applyTheme(settingsGet('theme', 'system'));
-  Viewer.night = settingsGet('night', false);
-  viewerEl().classList.toggle('night', Viewer.night);
-  buildTopbar();
-  buildStatusbar();
-  buildWelcome();
-  setupDragDrop();
-  wireEvents();
-  renderRibbon();
-  activate(null);
-  setTool('select');
-  Host.rendererReady();
-  document.body.classList.add('ready');
-}
 
-boot();

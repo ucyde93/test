@@ -1,7 +1,7 @@
 {
   "name": "sahifa-pdf",
   "version": "1.0.0",
-  "description": "Free, offline PDF reader and editor: read, comment, fill, sign, edit, organize and protect PDFs.",
+  "description": "Sahifa PDF",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -11,13 +11,16 @@
     "dist:mac": "electron-builder --mac --publish never",
     "dist:linux": "electron-builder --linux --publish never"
   },
-  "author": "Sahifa PDF contributors",
+  "author": {
+    "name": "MV Digital Tools"
+  },
   "license": "MIT",
   "dependencies": {
     "@cantoo/pdf-lib": "^2.11.1",
     "@fontsource/allura": "^5.3.0",
     "@fontsource/dancing-script": "^5.3.0",
     "@fontsource/great-vibes": "^5.3.0",
+    "@fontsource/manrope": "^5.3.0",
     "@fontsource/sacramento": "^5.3.0",
     "@signpdf/placeholder-pdf-lib": "^3.3.0",
     "@signpdf/signer-p12": "^3.3.0",
@@ -35,9 +38,9 @@
   "private": true,
   "homepage": "https://github.com/ucyde93/test/tree/main/sahifa-pdf",
   "build": {
-    "appId": "app.sahifa.pdf",
+    "appId": "com.mvdigitaltools.sahifapdf",
     "productName": "Sahifa PDF",
-    "copyright": "Free software under the MIT License",
+    "copyright": "© 2026 MV Digital Tools",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -47,8 +50,8 @@
       "preload.js",
       "lib/**/*",
       "renderer/**/*",
-      "build/icon.png",
       "package.json",
+      "build/icon.png",
       "!**/node_modules/**/*.map",
       "!**/node_modules/**/*.d.ts",
       "!**/node_modules/**/{README,CHANGELOG,readme,changelog}*",
@@ -59,15 +62,6 @@
       "!**/node_modules/pdf-lib/{es,dist,src,ts3.4}/**",
       "!**/node_modules/@fontsource/*/files/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*",
       "!**/node_modules/@fontsource/*/files/*.woff"
-    ],
-    "fileAssociations": [
-      {
-        "ext": "pdf",
-        "name": "PDF Document",
-        "description": "PDF Document",
-        "mimeType": "application/pdf",
-        "role": "Editor"
-      }
     ],
     "win": {
       "target": [
@@ -84,14 +78,36 @@
           ]
         }
       ],
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "legalTrademarks": "Sahifa PDF is a product of MV Digital Tools",
+      "fileAssociations": [
+        {
+          "ext": "pdf",
+          "name": "MVDigitalTools.SahifaPDF.Document",
+          "description": "PDF Document",
+          "role": "Editor"
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
+      "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "menuCategory": "MV Digital Tools",
       "shortcutName": "Sahifa PDF",
+      "uninstallDisplayName": "Sahifa PDF",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "build/installer.ico",
+      "uninstallerIcon": "build/installer.ico",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "license": "build/license.txt",
+      "include": "build/installer.nsh",
       "artifactName": "Sahifa-PDF-Setup-${version}.${ext}"
     },
     "portable": {
@@ -110,7 +126,16 @@
       "category": "public.app-category.productivity",
       "icon": "build/icon.png",
       "identity": null,
-      "artifactName": "Sahifa-PDF-${version}-${arch}.${ext}"
+      "artifactName": "Sahifa-PDF-${version}-${arch}.${ext}",
+      "fileAssociations": [
+        {
+          "ext": "pdf",
+          "name": "PDF Document",
+          "description": "PDF Document",
+          "mimeType": "application/pdf",
+          "role": "Editor"
+        }
+      ]
     },
     "linux": {
       "target": [
@@ -121,9 +146,21 @@
       "artifactName": "Sahifa-PDF-${version}.${ext}",
       "mimeTypes": [
         "application/pdf"
+      ],
+      "fileAssociations": [
+        {
+          "ext": "pdf",
+          "name": "PDF Document",
+          "description": "PDF Document",
+          "mimeType": "application/pdf",
+          "role": "Editor"
+        }
       ]
     },
-    "publish": null
+    "publish": null,
+    "extraMetadata": {
+      "productName": "Sahifa PDF"
+    }
   },
   "repository": {
     "type": "git",

@@ -34,13 +34,12 @@ async function main() {
   fs.writeFileSync(sample, await fixtures.samplePdf());
   fs.writeFileSync(form, await fixtures.formPdf());
 
-  const app = await _electron.launch({
-    executablePath: require('electron'),
-    args: [ROOT, '--no-sandbox', sample],
-    env: { ...process.env, ELECTRON_DISABLE_SECURITY_WARNINGS: '1' },
-  });
-  // Isolate settings and digital IDs from the developer's real profile.
-  await app.evaluate(({ app: a }, dir) => a.setPath('userData', dir), path.join(OUT, 'profile'));
+  // A private profile and home folder keep the test away from the real user's settings,
+  // including their default PDF app.
+  const home = path.join(OUT, 'home');
+  fs.mkdirSync(home, { recursive: true });
+  const env = { ...process.env, ELECTRON_DISABLE_SECURITY_WARNINGS: '1', SAHIFA_USER_DATA: path.join(OUT, 'profile'), HOME: home, XDG_CONFIG_HOME: path.join(home, '.config'), XDG_DATA_HOME: path.join(home, '.local', 'share') };
+  const app = await _electron.launch({ executablePath: require('electron'), args: [ROOT, '--no-sandbox', sample], env });
   const win = await app.firstWindow();
   const errors = [];
   win.on('pageerror', (e) => errors.push(e.message));
@@ -75,8 +74,8 @@ async function main() {
   const run = (cmd) => win.evaluate((c) => { App.run(c); }, cmd);
   const annCount = (i) => win.evaluate((k) => Viewer.doc.annotsAt(k).length, i);
   const clickRibbon = async (tab, label) => {
-    await win.click(`#ribbonNav .rn-tab:has-text("${tab}")`);
-    await win.click(`#ribbon .tb-btn:has-text("${label}")`);
+    await win.click(`#rail .rail-btn:has-text("${tab}")`);
+    await win.click(`#toolGroups .tb-btn:has-text("${label}")`);
   };
 
   await win.waitForFunction(() => typeof App !== 'undefined' && App.docs.length === 1 && Viewer.els[0] && Viewer.els[0]._key, null, { timeout: 30000 });
@@ -84,6 +83,27 @@ async function main() {
   await shot('01-opened');
   assert.equal(await win.evaluate(() => Viewer.doc.pageCount), 3);
   log('opens a PDF passed on the command line');
+
+  // ---- first run: offer to become the default PDF app ----
+  const st0 = await win.evaluate(() => App.defaultStatus);
+  if (st0 && st0.supported && process.platform === 'linux') {
+    await win.waitForSelector('#defaultYes', { timeout: 10000 });
+    await shot('00-first-run');
+    await win.click('#defaultYes');
+    await win.waitForFunction(() => App.defaultStatus && App.defaultStatus.isDefault, null, { timeout: 15000 });
+    const q = execFileSync('xdg-mime', ['query', 'default', 'application/pdf'], { env, encoding: 'utf8' }).trim();
+    assert.equal(q, 'mv-sahifa-pdf.desktop');
+    const desktop = fs.readFileSync(path.join(home, '.local', 'share', 'applications', 'mv-sahifa-pdf.desktop'), 'utf8');
+    assert.match(desktop, /MimeType=application\/pdf;/);
+    await win.evaluate(() => showHome());
+    await win.waitForSelector('.chip-ok');
+    await shot('00-home');
+    await win.evaluate(() => activate(App.docs[0]));
+    log('first run makes Sahifa PDF the default PDF app (registered with the desktop)');
+  } else {
+    const later = await win.waitForSelector('#defaultLater', { timeout: 3000 }).catch(() => null);
+    if (later) await later.click();
+  }
 
   // ---- search ----
   await win.fill('#findInput', 'quick brown');
@@ -104,7 +124,7 @@ async function main() {
   log('adds a text box by clicking and typing');
 
   // ---- highlight by selecting text ----
-  await win.click('#ribbon .tb-btn:has-text("Highlight")');
+  await win.click('#toolGroups .tb-btn:has-text("Highlight")');
   const line = await win.evaluate(() => {
     const spans = [...Viewer.els[0].querySelectorAll('.textLayer span')];
     const s = spans.find((n) => n.textContent.includes('quick brown'));
@@ -122,13 +142,13 @@ async function main() {
   log('highlights selected text');
 
   // ---- pen and rectangle ----
-  await win.click('#ribbon .tb-btn:has-text("Pen")');
+  await win.click('#toolGroups .tb-btn:has-text("Pen")');
   p = await at(0, 320, 600);
   await win.mouse.move(p.x, p.y);
   await win.mouse.down();
   for (let k = 1; k <= 12; k++) await win.mouse.move(p.x + k * 10, p.y + Math.sin(k) * 20);
   await win.mouse.up();
-  await win.click('#ribbon .tb-btn:has-text("Rectangle")');
+  await win.click('#toolGroups .tb-btn:has-text("Rectangle")');
   p = await at(0, 60, 600);
   await win.mouse.move(p.x, p.y);
   await win.mouse.down();
@@ -201,7 +221,7 @@ async function main() {
   log('creates a typed signature and places it');
 
   // ---- drawn initials ----
-  await win.click('#ribbon .tb-btn:has-text("Initials")');
+  await win.click('#toolGroups .tb-btn:has-text("Initials")');
   await win.waitForSelector('.dlg-sign');
   await win.click('.seg-btn:has-text("Draw")');
   const padBox = await win.evaluate(() => { const r = document.querySelector('.sig-pad').getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
@@ -217,7 +237,7 @@ async function main() {
   log('draws initials and places them');
 
   // ---- stamp and check mark ----
-  await win.click('#ribbon .tb-btn:has-text("Check")');
+  await win.click('#toolGroups .tb-btn:has-text("Check")');
   p = await at(0, 40, 700);
   await win.mouse.click(p.x, p.y);
   await clickRibbon('Comment', 'Stamp');
@@ -328,7 +348,7 @@ async function main() {
   await win.mouse.down();
   await win.mouse.move(target.x + target.w, target.y + target.h, { steps: 6 });
   await win.mouse.up();
-  await win.click('#ribbon .tb-btn:has-text("Apply")');
+  await win.click('#toolGroups .tb-btn:has-text("Apply")');
   await win.click('.dlg-actions .btn-danger');
   await waitIdle();
   await settle(500);

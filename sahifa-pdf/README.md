@@ -1,8 +1,12 @@
 # Sahifa PDF
 
+**A product of MV Digital Tools.**
+
 A free desktop PDF reader and editor for Windows, macOS and Linux. Everything runs on your own computer: no account, no subscription, no internet connection, no tracking and no AI.
 
 *Sahifa* (صحيفة) means "page" or "written sheet".
+
+The interface uses a light "liquid glass" design: frosted translucent panels over a soft aurora backdrop, with a matching dark mode.
 
 ## What it can do
 
@@ -24,11 +28,16 @@ Undo/redo covers every change. Your edits stay editable until you close the docu
 ### Download an installer
 Installers are built automatically by GitHub Actions for every change (see the **Actions** tab → *Sahifa PDF* → *Artifacts*). Pushing a tag such as `sahifa-v1.0.0` publishes them as a GitHub Release.
 
-- **Windows:** `Sahifa-PDF-Setup-x.y.z.exe` (installer) or `Sahifa-PDF-Portable-x.y.z.exe` (no install needed).
+- **Windows:** `Sahifa-PDF-Setup-x.y.z.exe` is a standard installation wizard (license page, choice of folder, Start Menu folder *MV Digital Tools*, desktop shortcut, uninstaller in *Apps & features*). `Sahifa-PDF-Portable-x.y.z.exe` runs without installing. The files are not code-signed yet, so Windows SmartScreen may show *More info → Run anyway* until you sign them with a code-signing certificate.
 - **macOS:** `Sahifa-PDF-x.y.z-arm64.dmg` (Apple Silicon) or `-x64.dmg` (Intel). The app is not notarized with Apple, so the first time right-click the app → **Open**.
 - **Linux:** `Sahifa-PDF-x.y.z.AppImage`. Make it executable (`chmod +x`) and run it.
 
-The installers register Sahifa PDF as an app for `.pdf` files, so you can choose it in "Open with" or make it the default.
+### Default PDF app
+On first launch Sahifa PDF offers to become your default PDF app, and the Home screen keeps a **Set as default** button until it is.
+
+- **Windows 10/11** require you to confirm the change yourself (programs are not allowed to take over file types silently). Sahifa opens the *Open with* window: pick **Sahifa PDF** and choose **Always**. You can use the Windows Settings page instead from the same dialog.
+- **macOS** switches directly where the system allows it, otherwise it shows the Finder steps (*Get Info → Open with → Change All*).
+- **Linux** registers a desktop entry and sets it with `xdg-mime`.
 
 ### Run from source
 Requires [Node.js](https://nodejs.org) 18 or newer.
@@ -68,6 +77,8 @@ On macOS use Cmd instead of Ctrl.
 ```
 sahifa-pdf/
 ├── main.js              Electron main process: windows, menus, files, digital IDs
+├── lib/default-app.js   "Make default PDF app" for Windows, macOS and Linux
+├── build/installer.nsh  Windows installer registration (Default apps, Open with)
 ├── preload.js           Safe bridge between the window and the main process
 ├── lib/digital-sign.js  Digital ID creation and PKCS#7 signing (node-forge, @signpdf)
 ├── renderer/            The app UI (plain HTML/CSS/JS)
@@ -84,6 +95,10 @@ sahifa-pdf/
 
 Built on free, open-source software: [Electron](https://www.electronjs.org), [pdf.js](https://mozilla.github.io/pdf.js/) (Mozilla), [pdf-lib](https://github.com/cantoo-scribe/pdf-lib), [node-forge](https://github.com/digitalbazaar/forge), [@signpdf](https://github.com/vbuch/node-signpdf) and signature fonts from the Google Fonts library (OFL).
 
+## Branding
+
+Company name, copyright and publisher are set in `package.json` (`author`, `build.copyright`, `build.win.legalTrademarks`) and shown in the app's Home footer, About window, splash screen, installer and PDF metadata. To use your official logo, replace `renderer/assets/mv-digital-tools.svg`; the app icon is `build/icon.svg` (export it to `build/icon.png` and `build/installer.ico`).
+
 ## License
 
-MIT
+MIT © 2026 MV Digital Tools

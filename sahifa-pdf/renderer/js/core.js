@@ -682,7 +682,7 @@ async function buildPdf(doc, { flatten = false, encrypt = true, pages = null } =
     if (list && list.length) await drawPageAnnots(dc, libPages[i], list);
   }
   applyMeta(pdf, doc.meta);
-  pdf.setProducer('Sahifa PDF');
+  pdf.setProducer('Sahifa PDF by MV Digital Tools');
   if (unicodeFields.length && !flatten) await finishUnicodeFields(pdf, unicodeFields);
   if (flatten) {
     try { pdf.getForm().flatten(); } catch (e) { console.warn('flatten failed', e); }

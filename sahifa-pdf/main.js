@@ -5,13 +5,24 @@ const fs = require('fs/promises');
 const fss = require('fs');
 const crypto = require('crypto');
 const digital = require('./lib/digital-sign');
+const defaultApp = require('./lib/default-app');
 
 const isMac = process.platform === 'darwin';
+if (process.env.SAHIFA_USER_DATA) app.setPath('userData', process.env.SAHIFA_USER_DATA);
 let win = null;
 let rendererReady = false;
 let pendingPaths = [];
 let anyDirty = false;
 let allowClose = false;
+let defaultCheckPending = false;
+const CHROME = { light: { color: '#eef1fa', symbolColor: '#3a4258' }, dark: { color: '#141927', symbolColor: '#c9d0e0' } };
+
+app.setAppUserModelId?.('com.mvdigitaltools.sahifapdf');
+app.setAboutPanelOptions?.({
+  applicationName: 'Sahifa PDF',
+  copyright: '© 2026 MV Digital Tools. All rights reserved.',
+  credits: 'A product of MV Digital Tools',
+});
 
 // ---------- helpers ----------
 const userFile = (name) => path.join(app.getPath('userData'), name);
@@ -73,8 +84,10 @@ function createWindow() {
     minWidth: 880,
     minHeight: 560,
     title: 'Sahifa PDF',
-    backgroundColor: '#e6e9e7',
+    backgroundColor: '#f3f5fc',
     icon: path.join(__dirname, 'build', 'icon.png'),
+    titleBarStyle: 'hidden',
+    ...(isMac ? { trafficLightPosition: { x: 16, y: 16 } } : { titleBarOverlay: { ...CHROME.light, height: 46 } }),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -103,6 +116,14 @@ function createWindow() {
     }
   });
   win.on('closed', () => { win = null; rendererReady = false; });
+  // After the user confirms the default app in Windows Settings or the Open With
+  // dialog, they come back to this window: re-check and tell the page.
+  win.on('focus', async () => {
+    if (!defaultCheckPending || !win) return;
+    const st = await defaultApp.status();
+    win.webContents.send('default-status', st);
+    if (st.isDefault) defaultCheckPending = false;
+  });
 
   // Links inside PDFs open in the system browser, never inside the app.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -220,6 +241,8 @@ async function buildMenu() {
     {
       label: 'Help',
       submenu: [
+        item('Make Sahifa My Default PDF App…', 'make-default'),
+        { type: 'separator' },
         item('Keyboard Shortcuts', 'shortcuts', 'F1'),
         item('About Sahifa PDF', 'about'),
       ],
@@ -280,12 +303,68 @@ ipcMain.handle('save-many', async (_e, { files, title }) => {
   return { dir, count: files.length };
 });
 
-ipcMain.handle('recent-get', () => getRecent());
+ipcMain.handle('recent-get', async () => (await getRecent()).map((p) => {
+  const st = fss.statSync(p);
+  return { path: p, name: path.basename(p), size: st.size, mtime: st.mtimeMs };
+}));
 ipcMain.handle('show-in-folder', (_e, p) => shell.showItemInFolder(p));
 ipcMain.handle('open-external', (_e, url) => {
   if (/^(https?:|mailto:)/i.test(url)) return shell.openExternal(url);
 });
-ipcMain.handle('app-info', () => ({ version: app.getVersion(), platform: process.platform, electron: process.versions.electron }));
+ipcMain.handle('app-info', () => ({ version: app.getVersion(), platform: process.platform, electron: process.versions.electron, company: 'MV Digital Tools' }));
+
+// ---------- window chrome ----------
+ipcMain.on('set-chrome', (_e, theme) => {
+  if (!win || isMac || !win.setTitleBarOverlay) return;
+  try { win.setTitleBarOverlay({ ...(CHROME[theme] || CHROME.light), height: 46 }); } catch { /* not supported */ }
+});
+ipcMain.on('menu-popup', (_e, { x, y }) => {
+  const menu = Menu.getApplicationMenu();
+  if (menu && win) menu.popup({ window: win, x: Math.round(x), y: Math.round(y) });
+});
+
+// ---------- default PDF app ----------
+async function welcomePdfPath() {
+  const file = userFile('Welcome to Sahifa PDF.pdf');
+  if (fss.existsSync(file)) return file;
+  const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
+  const pdf = await PDFDocument.create();
+  const page = pdf.addPage([595.28, 841.89]);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const ink = rgb(0.08, 0.09, 0.11);
+  const muted = rgb(0.38, 0.41, 0.46);
+  const accent = rgb(0.18, 0.36, 0.92);
+  page.drawRectangle({ x: 0, y: 741.89, width: 595.28, height: 100, color: rgb(0.08, 0.09, 0.11) });
+  page.drawText('Sahifa PDF', { x: 56, y: 790, size: 26, font: bold, color: rgb(1, 1, 1) });
+  page.drawText('A PRODUCT OF MV DIGITAL TOOLS', { x: 56, y: 766, size: 9, font: bold, color: rgb(0.62, 0.68, 0.98) });
+  page.drawText('Welcome. You are all set.', { x: 56, y: 680, size: 22, font: bold, color: ink });
+  const lines = [
+    'Sahifa PDF opens, fills, signs, edits and organizes PDF files on your computer.',
+    'It is free, works offline, and never uploads your documents anywhere.',
+    '',
+    'Quick tips',
+    '  •  Drag any PDF onto the window to open it.',
+    '  •  Fill & Sign: type, draw or upload your signature and place it anywhere.',
+    '  •  Edit: click a line of existing text to change it.',
+    '  •  Organize: drag pages to reorder, rotate, merge and split.',
+    '  •  Protect: add a password or permanently redact sensitive content.',
+  ];
+  lines.forEach((t, i) => page.drawText(t, { x: 56, y: 640 - i * 22, size: t === 'Quick tips' ? 13 : 11.5, font: t === 'Quick tips' ? bold : font, color: t === 'Quick tips' ? accent : muted }));
+  page.drawText('© 2026 MV Digital Tools', { x: 56, y: 48, size: 9, font, color: muted });
+  pdf.setTitle('Welcome to Sahifa PDF');
+  pdf.setAuthor('MV Digital Tools');
+  await fs.writeFile(file, await pdf.save());
+  return file;
+}
+
+ipcMain.handle('default-status', () => defaultApp.status());
+ipcMain.handle('default-set', async (_e, { via } = {}) => {
+  const res = await defaultApp.makeDefault({ welcomePdf: await welcomePdfPath(), via });
+  if (res.confirm) defaultCheckPending = true;
+  return res;
+});
+ipcMain.handle('default-settings', () => defaultApp.openSystemSettings());
 
 // ---------- Digital IDs ----------
 async function listIds() {

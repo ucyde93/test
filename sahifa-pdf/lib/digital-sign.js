@@ -84,7 +84,7 @@ async function signPdf(pdfBytes, p12Bytes, password, { reason = '', location = '
     name,
     signingTime: new Date(),
     signatureLength: 16384,
-    appName: 'Sahifa PDF',
+    appName: 'Sahifa PDF by MV Digital Tools',
   });
   const withPlaceholder = await pdfDoc.save({ useObjectStreams: false });
   const signer = new P12Signer(Buffer.from(p12Bytes), { passphrase: password });

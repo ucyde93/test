@@ -7,99 +7,87 @@
   <title>Sahifa PDF</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="no-doc">
+<body class="home">
   <div id="app">
-    <header id="topbar">
-      <div class="brand" aria-label="Sahifa PDF">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-          <path d="M8 3h11l6 6v18a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" class="bm-page"/>
-          <path d="M19 3v6h6" class="bm-fold"/>
-          <path d="M10.5 21c2.5-.4 3.5-5.5 5.2-5.5 1.6 0 .2 4.6 1.8 4.6 1.2 0 1.7-2.2 3-2.2" class="bm-ink"/>
-        </svg>
-        <span class="brand-name">Sahifa</span>
-      </div>
+    <!-- Window frame: brand menu, Home, document tabs, search. The OS window buttons sit over the right end. -->
+    <header id="titlebar">
+      <button id="brandMenu" class="brand" title="Menu" aria-label="Sahifa PDF menu">
+        <img src="../build/icon.png" alt="" class="brand-icon">
+        <span class="brand-name">Sahifa <b>PDF</b></span>
+        <span class="brand-chev" id="brandChev"></span>
+      </button>
+      <button id="homeTab" class="tb-home on" aria-label="Home"><span id="homeIcon"></span><span>Home</span></button>
       <nav id="docTabs" role="tablist" aria-label="Open documents"></nav>
-      <div class="find">
+      <div class="tb-drag"></div>
+      <div class="find" role="search">
         <span id="searchIcon" class="find-icon"></span>
-        <input id="findInput" type="search" placeholder="Find in document" aria-label="Find in document" autocomplete="off">
+        <input id="findInput" type="search" placeholder="Search in document" aria-label="Search in document" autocomplete="off" spellcheck="false">
         <span id="findCount" class="find-count" aria-live="polite"></span>
-        <button id="findPrev" class="icon-btn" aria-label="Previous result" title="Previous (Shift+Enter)"></button>
-        <button id="findNext" class="icon-btn" aria-label="Next result" title="Next (Enter)"></button>
+        <button id="findPrev" class="find-btn" aria-label="Previous result" title="Previous (Shift+Enter)"></button>
+        <button id="findNext" class="find-btn" aria-label="Next result" title="Next (Enter)"></button>
+        <kbd class="find-kbd">Ctrl F</kbd>
       </div>
-      <button id="helpBtn" class="icon-btn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (F1)"></button>
-      <button id="themeBtn" class="icon-btn" aria-label="Change theme"></button>
+      <button id="themeBtn" class="frame-btn" aria-label="Change theme"></button>
     </header>
 
-    <nav id="ribbonNav" role="tablist" aria-label="Tool groups"></nav>
-    <div id="ribbon" role="toolbar" aria-label="Tools"></div>
-    <div id="contextBar" role="toolbar" aria-label="Properties"></div>
-
-    <main id="workspace">
-      <aside id="sidebar" hidden>
-        <div id="sideTabs" role="tablist" aria-label="Sidebar"></div>
-        <div id="sidePanel"></div>
-      </aside>
-      <section id="stage">
-        <div id="banner" hidden></div>
-        <div id="welcome">
-          <div class="w-inner">
-            <p class="w-kicker">Free PDF reader &amp; editor · works offline</p>
-            <h1>Open a PDF to read, fill, sign and edit it.</h1>
-            <div class="w-drop">
-              <button id="wOpen" class="btn btn-primary btn-lg">Open PDF</button>
-              <span class="muted">or drop files anywhere in this window</span>
-            </div>
-            <div id="wQuick" class="w-quick-row"></div>
-            <p id="wDesktopNote" class="w-note" hidden>You are using the browser preview. Install the desktop app for saving in place, digital IDs and opening PDFs from your file manager.</p>
-            <div id="recentWrap" hidden>
-              <h2 class="w-h2">Recent files</h2>
-              <ul id="recentList" class="recent"></ul>
-            </div>
-            <dl class="w-features">
-              <div><dt>Read</dt><dd>Thumbnails, bookmarks, search, night mode, read aloud, presentation mode</dd></div>
-              <div><dt>Comment</dt><dd>Highlight, underline, sticky notes, pen, shapes, stamps</dd></div>
-              <div><dt>Edit</dt><dd>Change existing text, add text and images, white-out, watermarks, page numbers</dd></div>
-              <div><dt>Fill &amp; Sign</dt><dd>Fill forms, draw or type your signature, certificate-based digital IDs</dd></div>
-              <div><dt>Organize</dt><dd>Reorder, rotate, delete, insert, merge, split, extract, crop pages</dd></div>
-              <div><dt>Protect</dt><dd>AES-256 passwords, true redaction, remove hidden information</dd></div>
-            </dl>
+    <div id="main">
+      <nav id="rail" aria-label="Tool sets"></nav>
+      <div id="content">
+        <div id="toolbar" role="toolbar" aria-label="Tools">
+          <div id="toolGroups" class="tool-groups"></div>
+          <div class="toolbar-end">
+            <span id="docState" class="doc-state" aria-live="polite"></span>
+            <button id="tbUndo" class="icon-btn" aria-label="Undo" title="Undo (Ctrl+Z)"></button>
+            <button id="tbRedo" class="icon-btn" aria-label="Redo" title="Redo (Ctrl+Y)"></button>
+            <button id="tbPrint" class="icon-btn" aria-label="Print" title="Print (Ctrl+P)"></button>
+            <button id="tbSave" class="btn btn-primary btn-sm" title="Save (Ctrl+S)">Save</button>
           </div>
         </div>
-        <div id="viewer" data-mode="select" hidden>
-          <div id="pages"></div>
-        </div>
-        <div id="organizer" hidden></div>
-      </section>
-    </main>
+        <div id="contextBar" role="toolbar" aria-label="Properties"></div>
+        <main id="workspace">
+          <aside id="sidebar" hidden>
+            <div id="sideTabs" role="tablist" aria-label="Panels"></div>
+            <div id="sidePanel"></div>
+          </aside>
+          <section id="stage">
+            <div id="banner" hidden></div>
+            <div id="viewer" data-mode="select" hidden>
+              <div id="pages"></div>
+            </div>
+            <div id="organizer" hidden></div>
+            <div id="pageControls" class="page-controls" role="toolbar" aria-label="Page and zoom">
+              <button id="sbPrev" class="pc-btn"></button>
+              <span class="pc-page"><input id="pageInput" type="text" inputmode="numeric" aria-label="Page number"><span id="pageCount"></span></span>
+              <button id="sbNext" class="pc-btn"></button>
+              <span class="pc-sep"></span>
+              <button id="sbZoomOut" class="pc-btn"></button>
+              <button id="zoomLabel" class="pc-zoom" title="Set zoom" aria-label="Zoom level"></button>
+              <button id="sbZoomIn" class="pc-btn"></button>
+              <span class="pc-sep"></span>
+              <button id="sbFitWidth" class="pc-btn"></button>
+              <button id="sbFitPage" class="pc-btn"></button>
+              <button id="sbNight" class="pc-btn"></button>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
 
-    <footer id="statusbar">
-      <div class="sb-left">
-        <button id="sbSidebar" class="icon-btn"></button>
-        <span class="sb-sep"></span>
-        <button id="sbFirst" class="icon-btn"></button>
-        <button id="sbPrev" class="icon-btn"></button>
-        <input id="pageInput" class="sb-page" type="text" inputmode="numeric" aria-label="Page number">
-        <span id="pageCount" class="muted"></span>
-        <button id="sbNext" class="icon-btn"></button>
-        <button id="sbLast" class="icon-btn"></button>
-      </div>
-      <div class="sb-mid">
-        <button id="sbZoomOut" class="icon-btn"></button>
-        <button id="zoomLabel" class="sb-zoom" title="Set zoom" aria-label="Zoom level"></button>
-        <button id="sbZoomIn" class="icon-btn"></button>
-        <button id="sbFitWidth" class="icon-btn"></button>
-        <button id="sbFitPage" class="icon-btn"></button>
-        <span class="sb-sep"></span>
-        <button id="sbNight" class="icon-btn"></button>
-      </div>
-      <div class="sb-right"><span id="docState" class="muted" aria-live="polite"></span></div>
-    </footer>
+    <section id="home" aria-label="Home"></section>
   </div>
 
   <div id="modalRoot"></div>
   <div id="toasts" aria-live="polite"></div>
   <div id="busy" hidden><div class="busy-card"><span class="spinner" aria-hidden="true"></span><span id="busyLabel">Working…</span></div></div>
-  <div id="dropHint" aria-hidden="true"><div>Drop to open</div></div>
+  <div id="dropHint" aria-hidden="true"><div><span id="dropIcon"></span>Drop to open in Sahifa PDF</div></div>
+  <div id="splash" aria-hidden="true">
+    <div class="splash-inner">
+      <img src="../build/icon.png" alt="" class="splash-icon">
+      <div class="splash-name">Sahifa <b>PDF</b></div>
+      <div class="splash-by">A product of MV Digital Tools</div>
+      <div class="splash-bar"><span></span></div>
+    </div>
+  </div>
   <div id="printRoot"></div>
 
   <script src="../node_modules/pdfjs-dist/build/pdf.min.js"></script>
@@ -113,5 +101,6 @@
   <script src="js/dialogs.js"></script>
   <script src="js/organize.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/shell.js"></script>
 </body>
 </html>
