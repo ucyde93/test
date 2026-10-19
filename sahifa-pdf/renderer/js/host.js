@@ -57,6 +57,8 @@ const Host = window.sahifaHost || {
   async idsDelete() {},
   async idsExport() {},
   async digitalSign() { throw new Error('Certificate signing needs the desktop app.'); },
+  async libraryGet() { return settingsGet('library', null); },
+  async librarySet(items) { settingsSet('library', items); return true; },
   async defaultStatus() { return { platform: 'web', supported: false, isDefault: false }; },
   async makeDefault() { return { error: 'Install the desktop app to make it your default PDF app.' }; },
   async openDefaultSettings() {},

@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld('sahifaHost', {
   onMenu: (cb) => ipcRenderer.on('menu', (_e, cmd, arg) => cb(cmd, arg)),
   onOpenPaths: (cb) => ipcRenderer.on('open-paths', (_e, paths) => cb(paths)),
   rendererReady: () => ipcRenderer.send('renderer-ready'),
+  libraryGet: () => ipcRenderer.invoke('library-get'),
+  librarySet: (items) => ipcRenderer.invoke('library-set', items),
   defaultStatus: () => ipcRenderer.invoke('default-status'),
   makeDefault: (opts) => ipcRenderer.invoke('default-set', opts),
   openDefaultSettings: () => ipcRenderer.invoke('default-settings'),

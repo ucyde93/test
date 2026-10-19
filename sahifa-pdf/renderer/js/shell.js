@@ -27,7 +27,7 @@ const MODES = [
     [C('metadata', 'Info', 'info', 'Title, author and keywords'), C('attach', 'Attach', 'attach', 'Attach a file')],
   ] },
   { id: 'sign', label: 'Fill & Sign', icon: 'sign', groups: [
-    [C('sign', 'Signature', 'sign'), C('initials', 'Initials', 'initials')],
+    [C('sign', 'Signature', 'sign'), C('initials', 'Initials', 'initials'), C('seal', 'Seal', 'seal', 'Company seals and saved stamps'), C('library', 'My library', 'library', 'Saved signatures, seals and stamps')],
     [T('text', 'Text', 'text'), T('date', 'Date', 'date'), T('check', 'Check', 'check'), T('cross', 'Cross', 'cross'), T('dot', 'Dot', 'dot')],
     [C('digital-sign', 'Digital ID', 'certificate', 'Sign with a certificate')],
     [C('save-flat', 'Flatten', 'layers', 'Save a copy with fields and edits merged into the pages')],
@@ -49,7 +49,7 @@ const MODES = [
     [C('new-from-images', 'From images', 'images'), C('new-blank', 'Blank PDF', 'blank'), C('merge-files', 'Merge files', 'merge')],
   ] },
 ];
-const NEEDS_DOC = (cmd) => !['open', 'new-from-images', 'new-blank', 'merge-files', 'shortcuts', 'about', 'theme', 'digital-ids', 'make-default', 'home'].includes(cmd);
+const NEEDS_DOC = (cmd) => !['open', 'new-from-images', 'new-blank', 'merge-files', 'shortcuts', 'about', 'theme', 'digital-ids', 'make-default', 'home', 'library', 'design-seal'].includes(cmd);
 
 // ---------- rail & toolbar ----------
 function setMode(id) {
@@ -87,9 +87,11 @@ function renderToolbar() {
   const hasDoc = !!App.active;
   mode.groups.forEach((items, gi) => {
     if (gi) box.append(el('span', { class: 'tg-sep', 'aria-hidden': 'true' }));
+    const group = el('span', { class: 'tg' });
+    box.append(group);
     for (const it of items) {
       const active = it.tool && hasDoc && Annotations.tool === it.tool;
-      box.append(el('button', {
+      group.append(el('button', {
         class: 'tb-btn' + (active ? ' on' : ''),
         title: (it.title || it.label) + (it.key ? `  (${it.key})` : ''),
         'aria-pressed': it.tool ? (active ? 'true' : 'false') : null,
@@ -106,8 +108,10 @@ function renderToolbar() {
 /** Shows labels when they fit, icons only (with tooltips) when they do not. */
 function fitToolbar() {
   const box = $('#toolGroups');
-  box.classList.remove('compact');
-  if (box.scrollWidth > box.clientWidth + 1) box.classList.add('compact');
+  const groups = $$('.tg', box);
+  groups.forEach((g) => g.classList.remove('icons-only'));
+  // Drop labels group by group, starting with the last, until everything fits.
+  for (let i = groups.length - 1; i >= 0 && box.scrollWidth > box.clientWidth + 1; i--) groups[i].classList.add('icons-only');
 }
 // Older call sites refresh "the ribbon".
 const renderRibbon = () => { renderRail(); renderToolbar(); };
@@ -274,7 +278,7 @@ const HOME_TOOLS = [
   { t: 'Digital ID', d: 'Sign with a certificate readers can verify', icon: 'certificate', tint: '#0f766e', mode: 'sign', cmd: 'digital-sign' },
   { t: 'Images to PDF', d: 'Turn photos and scans into a PDF', icon: 'images', tint: '#b45309', cmd: 'new-from-images', noDoc: true },
   { t: 'Export images', d: 'Save pages as PNG or JPEG', icon: 'exportImage', tint: '#4338ca', mode: 'convert', cmd: 'export-images' },
-  { t: 'Watermark', d: 'Stamp text across your pages', icon: 'watermark', tint: '#6d28d9', mode: 'edit', cmd: 'watermark' },
+  { t: 'Signatures & seals', d: 'Your saved signatures, company seals and stamps', icon: 'seal', tint: '#6d28d9', cmd: 'library', noDoc: true },
 ];
 
 async function launchTool(tool) {

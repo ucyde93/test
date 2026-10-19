@@ -333,12 +333,11 @@ App.run = async (cmd) => {
       case 'make-default': return makeDefaultFlow();
       case 'home': return showHome();
       case 'about': return aboutDialog();
-      case 'sign':
-      case 'initials': {
-        const sig = await signatureDialog(cmd === 'sign' ? 'signature' : 'initials');
-        if (sig) setPending({ kind: 'image', src: sig.src, w: sig.w, h: sig.h, role: cmd === 'sign' ? 'signature' : 'initials', hint: 'Click on the page where you want to sign. Press Esc to cancel.' });
-        return;
-      }
+      case 'sign': return signCommand('signature');
+      case 'initials': return signCommand('initials');
+      case 'seal': return sealCommand();
+      case 'library': return libraryManager();
+      case 'design-seal': return sealDesigner();
       case 'stamp': {
         const st = await stampDialog();
         if (st) setPending({ kind: 'stamp', ...st, hint: 'Click on the page to place the stamp.' });
@@ -612,7 +611,7 @@ function renderSidebar() {
     if (!items.length) box.append(el('p', { class: 'muted pad' }, 'Your comments, highlights, signatures and other edits will be listed here.'));
     const label = { text: 'Text', note: 'Note', highlight: 'Highlight', underline: 'Underline', strike: 'Strikeout', ink: 'Drawing', rect: 'Rectangle', ellipse: 'Ellipse', line: 'Line', image: 'Image', stamp: 'Stamp', symbol: 'Mark', whiteout: 'White-out', redact: 'Redaction' };
     for (const { page, annot } of items) {
-      const desc = annot.text || annot.sub || (annot.role === 'signature' ? 'Signature' : annot.role === 'initials' ? 'Initials' : '');
+      const desc = annot.text || annot.sub || (annot.role === 'signature' ? 'Signature' : annot.role === 'initials' ? 'Initials' : annot.role === 'seal' ? 'Seal' : '');
       box.append(el('button', { class: 'cmt', onclick: () => { goToPage(page, annotBBox(annot).y - 40, true); setTool('select'); select({ page, id: annot.id }); } },
         el('span', { class: 'cmt-type', style: { '--c': annot.color || annot.stroke || '#5b6472' } }, label[annot.type] || annot.type),
         el('span', { class: 'cmt-page' }, `p. ${page + 1}`),

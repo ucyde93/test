@@ -228,18 +228,12 @@ async function imageToSignature(data, removeBg) {
   return { src: r.src, w: r.w * s, h: r.h * s };
 }
 
-function savedSignatures() { return settingsGet('signatures', []); }
-function storeSignature(sig) {
-  const list = savedSignatures().filter((s) => s.src !== sig.src);
-  list.unshift({ id: uid('s'), ...sig });
-  settingsSet('signatures', list.slice(0, 8));
-}
-
-async function signatureDialog(kind = 'signature') {
+async function signatureDialog(kind = 'signature', { saveOnly = false } = {}) {
+  await Library.load();
   const isInit = kind === 'initials';
   const label = isInit ? 'initials' : 'signature';
   let color = settingsGet('inkColor', INK_COLORS[0][0]);
-  let tab = savedSignatures().some((s) => s.kind === kind) ? 'saved' : 'type';
+  let tab = !saveOnly && Library.of(kind).length ? 'saved' : 'type';
   let chosenFont = settingsGet('sigFont', SIG_FONTS[0].family);
   let upload = null;
   let pickedSaved = null;
@@ -275,12 +269,13 @@ async function signatureDialog(kind = 'signature') {
   const savedBox = el('div', { class: 'sig-saved' });
   const renderSaved = () => {
     savedBox.innerHTML = '';
-    const list = savedSignatures().filter((s) => s.kind === kind);
+    const list = Library.of(kind);
     if (!list.length) savedBox.append(el('p', { class: 'muted' }, `No saved ${label}s yet.`));
+    if (!pickedSaved) pickedSaved = list.find((x) => x.isDefault) || null;
     for (const s of list) {
       const card = el('div', { class: 'sig-saved-item' + (pickedSaved === s ? ' on' : '') },
-        el('button', { class: 'sig-saved-pick', 'aria-label': 'Use this ' + label, onclick: () => { pickedSaved = s; renderSaved(); } }, el('img', { src: s.src, alt: '' })),
-        el('button', { class: 'icon-btn', 'aria-label': 'Remove', title: 'Remove', onclick: () => { settingsSet('signatures', savedSignatures().filter((x) => x.id !== s.id)); if (pickedSaved === s) pickedSaved = null; renderSaved(); } }, icon('trash', 16)));
+        el('button', { class: 'sig-saved-pick', 'aria-label': 'Use ' + s.name, onclick: () => { pickedSaved = s; renderSaved(); } }, el('img', { src: s.src, alt: '' }), el('span', { class: 'sig-saved-name' }, s.isDefault ? icon('star', 11) : null, s.name)),
+        el('button', { class: 'icon-btn', 'aria-label': 'Remove', title: 'Remove', onclick: async () => { await Library.remove(s.id); if (pickedSaved === s) pickedSaved = null; renderSaved(); } }, icon('trash', 16)));
       savedBox.append(card);
     }
   };
@@ -306,26 +301,30 @@ async function signatureDialog(kind = 'signature') {
   const host = el('div', {});
   const renderTabs = () => {
     tabs.innerHTML = '';
-    for (const [k, lab] of [['saved', 'Saved'], ['type', 'Type'], ['draw', 'Draw'], ['upload', 'Image']]) {
+    for (const [k, lab] of (saveOnly ? [['type', 'Type'], ['draw', 'Draw'], ['upload', 'Image']] : [['saved', 'Saved'], ['type', 'Type'], ['draw', 'Draw'], ['upload', 'Image']])) {
       tabs.append(el('button', { class: 'seg-btn' + (k === tab ? ' on' : ''), role: 'tab', 'aria-selected': k === tab ? 'true' : 'false', onclick: () => { tab = k; renderTabs(); } }, lab));
     }
     host.innerHTML = '';
     host.append(panels[tab]);
     colorRow.hidden = tab === 'saved' || tab === 'upload';
+    saveRow.hidden = tab === 'saved';
   };
-  renderTabs();
   const remember = el('input', { type: 'checkbox', checked: true, id: 'sigRemember' });
+  const saveName = textInput('', { placeholder: `Name in your library (e.g. “${isInit ? 'Initials' : 'Full signature'}”)`, id: 'sigSaveName' });
+  const saveRow = el('div', { class: 'row between' }, saveOnly ? el('span', { class: 'fld-label' }, 'Name') : el('label', { class: 'check' }, remember, 'Save to my library'), saveName);
+  renderTabs();
+  remember.addEventListener('change', () => { saveName.disabled = !remember.checked; });
 
   let result = null;
   const ok = await dialog({
     title: isInit ? 'Add your initials' : 'Add your signature',
     width: 680,
     className: 'dlg-sign',
-    content: el('div', { class: 'stack' }, tabs, host, el('div', { class: 'row between' }, colorRow, el('label', { class: 'check' }, remember, 'Save for next time'))),
+    content: el('div', { class: 'stack' }, tabs, host, colorRow, saveRow),
     buttons: [
       { label: 'Cancel', value: null },
       {
-        label: isInit ? 'Use initials' : 'Use signature', kind: 'primary', value: true,
+        label: saveOnly ? 'Save to library' : isInit ? 'Use initials' : 'Use signature', kind: 'primary', value: true,
         validate: async () => {
           if (tab === 'saved') { if (!pickedSaved) return `Pick a saved ${label}, or create one in another tab.`; result = pickedSaved; return null; }
           if (tab === 'type') {
@@ -344,7 +343,10 @@ async function signatureDialog(kind = 'signature') {
           }
           if (!result) return `That ${label} came out empty. Try again.`;
           if (isInit) { const k = 36 / result.h; result = { ...result, w: result.w * k, h: 36 }; }
-          if (remember.checked) storeSignature({ kind, src: result.src, w: result.w, h: result.h });
+          if (remember.checked || saveOnly) {
+            const typedName = tab === 'type' ? nameInput.value.trim() : '';
+            await Library.add({ kind, name: saveName.value.trim() || Library.nextName(kind, typedName || undefined), src: result.src, w: result.w, h: result.h });
+          }
           return null;
         },
       },
@@ -360,7 +362,11 @@ const STAMPS = [
   ['VOID', '#b42318'], ['COPY', '#5b6472'], ['URGENT', '#c2410c'], ['COMPLETED', '#0b6e5c'],
 ];
 async function stampDialog() {
+  await Library.load();
   let pick = STAMPS[0];
+  let pickSaved = null;
+  const saveIt = el('input', { type: 'checkbox', id: 'stampSaveLib' });
+  const savedGrid = el('div', { class: 'stamp-grid' });
   const custom = textInput('', { placeholder: 'Or type your own stamp text', maxlength: 40 });
   const withSub = el('input', { type: 'checkbox', checked: settingsGet('stampSub', true) });
   const nameInput = textInput(settingsGet('author', ''), { placeholder: 'Your name (optional)' });
@@ -368,7 +374,11 @@ async function stampDialog() {
   const render = () => {
     grid.innerHTML = '';
     for (const s of STAMPS) {
-      grid.append(el('button', { class: 'stamp-choice' + (s === pick && !custom.value ? ' on' : ''), style: { color: s[1], borderColor: s[1] }, onclick: () => { pick = s; custom.value = ''; render(); } }, s[0]));
+      grid.append(el('button', { class: 'stamp-choice' + (s === pick && !pickSaved && !custom.value ? ' on' : ''), style: { color: s[1], borderColor: s[1] }, onclick: () => { pick = s; pickSaved = null; custom.value = ''; render(); } }, s[0]));
+    }
+    savedGrid.innerHTML = '';
+    for (const it of Library.of('stamp')) {
+      savedGrid.append(el('button', { class: 'stamp-choice stamp-saved' + (pickSaved === it ? ' on' : ''), style: { color: it.spec.color, borderColor: it.spec.color }, title: it.name, onclick: () => { pickSaved = it; custom.value = ''; render(); } }, it.spec.text, el('small', {}, it.name)));
     }
   };
   custom.addEventListener('input', render);
@@ -376,16 +386,24 @@ async function stampDialog() {
   const res = await dialog({
     title: 'Choose a stamp',
     width: 560,
-    content: el('div', { class: 'stack' }, grid, field('Custom', custom),
-      el('label', { class: 'check' }, withSub, 'Add name and date under the stamp'), field('Name', nameInput)),
+    content: el('div', { class: 'stack' },
+      Library.of('stamp').length ? el('div', { class: 'stack tight' }, el('span', { class: 'fld-label' }, 'My saved stamps'), savedGrid) : null,
+      el('span', { class: 'fld-label' }, 'Standard stamps'), grid, field('Custom', custom),
+      el('label', { class: 'check' }, withSub, 'Add name and date under the stamp'), field('Name', nameInput),
+      el('label', { class: 'check' }, saveIt, 'Save this stamp to my library')),
     buttons: [{ label: 'Cancel', value: null }, { label: 'Place stamp', kind: 'primary', value: true }],
   });
   if (!res) return null;
+  if (pickSaved && !custom.value.trim()) return stampGeometry(pickSaved.spec);
   settingsSet('stampSub', withSub.checked);
   if (nameInput.value.trim()) settingsSet('author', nameInput.value.trim());
   const text = (custom.value.trim() || pick[0]).toUpperCase();
   const color = custom.value.trim() ? Annotations.props.stamp.color : pick[1];
   const sub = withSub.checked ? [nameInput.value.trim(), todayString()].filter(Boolean).join(' · ') : '';
+  if (saveIt.checked) {
+    await Library.add({ kind: 'stamp', name: Library.nextName('stamp', text.charAt(0) + text.slice(1).toLowerCase()), spec: { text, color, includeName: withSub.checked && !!nameInput.value.trim(), name: nameInput.value.trim(), includeDate: withSub.checked } });
+    toast('Stamp saved to your library', 'ok');
+  }
   _measureCanvas.font = `700 100px ${FONT_CSS.Helvetica}`;
   const h = sub ? 52 : 40;
   const w = Math.max(110, (_measureCanvas.measureText(text).width / 100) * (sub ? 22 : 22) + 34);

@@ -250,6 +250,76 @@ async function main() {
   assert.ok(await win.evaluate(() => Viewer.doc.annotsAt(0).some((a) => a.type === 'symbol')));
   log('places a stamp and a check mark');
 
+  // ---- signatures & seals library ----
+  await win.evaluate(() => goToPage(0));
+  await settle(300);
+  assert.equal(await win.evaluate(() => Library.of('signature')[0].name), 'Aminath Test', 'typed signature saved under its name');
+  assert.equal(await win.evaluate(() => Library.of('initials').length), 1, 'drawn initials saved');
+  await clickRibbon('Fill & Sign', 'Signature');
+  await win.waitForSelector('.lib-picker .lib-pick');
+  await shot('08-signature-picker');
+  await win.click('.lib-picker .lib-pick');
+  p = await at(0, 330, 470);
+  await win.mouse.move(p.x - 20, p.y);
+  await win.mouse.click(p.x, p.y);
+  await settle();
+  assert.equal(await win.evaluate(() => Viewer.doc.annotsAt(0).filter((a) => a.role === 'signature').length), 2, 'saved signature placed from the picker');
+
+  await win.click('#toolGroups .tb-btn:has-text("Seal")');
+  await win.waitForSelector('.lib-picker');
+  await win.click('.lib-picker .btn:has-text("Design a seal")');
+  await win.waitForSelector('.dlg-seal');
+  await win.fill('#sealTop', 'MV DIGITAL TOOLS');
+  await win.fill('#sealBottom', 'MALE · MALDIVES');
+  await win.fill('#sealCenter', 'APPROVED');
+  await win.fill('#sealName', 'Company seal');
+  await shot('09-seal-designer');
+  await win.click('#sealPlace');
+  p = await at(0, 470, 470);
+  await win.mouse.move(p.x - 20, p.y);
+  await win.mouse.click(p.x, p.y);
+  await settle();
+  assert.ok(await win.evaluate(() => Viewer.doc.annotsAt(0).some((a) => a.role === 'seal')), 'seal placed');
+
+  await run('library');
+  await win.waitForSelector('.dlg-library');
+  await win.click('.dlg-library .seg-btn:has-text("Seals")');
+  await win.click('.dlg-library .btn:has-text("Text stamp")');
+  await win.fill('#stampText', 'Received');
+  await win.fill('#stampNameLine', 'MV Digital Tools');
+  await win.click('.dlg >> nth=1 >> .dlg-actions .btn-primary');
+  await win.waitForFunction(() => Library.of('stamp').length === 1);
+  await settle(300);
+  await shot('10-library');
+  // Export a backup, delete the stamp, then import the backup again.
+  const libFile = path.join(OUT, 'backup.sahifalib');
+  await stubSave(libFile);
+  await win.click('.dlg-library .btn:has-text("Export")');
+  await win.waitForFunction(() => true);
+  await settle(500);
+  assert.ok(fs.existsSync(libFile), 'library exported');
+  await win.click('#libDone');
+  await win.evaluate(() => Library.remove(Library.of('stamp')[0].id));
+  await stubOpen([libFile]);
+  await run('library');
+  await win.waitForSelector('.dlg-library');
+  await win.click('.dlg-library .btn:has-text("Import")');
+  await win.waitForFunction(() => Library.of('stamp').length === 1, null, { timeout: 10000 });
+  await win.click('#libDone');
+  const saved = JSON.parse(fs.readFileSync(path.join(OUT, 'profile', 'library.json'), 'utf8'));
+  assert.deepEqual(saved.items.map((x) => x.kind).sort(), ['initials', 'seal', 'signature', 'stamp'], 'library stored on disk');
+  // A saved stamp can be placed from the Seal picker.
+  await win.click('#rail .rail-btn:has-text("Fill & Sign")');
+  await win.click('#toolGroups .tb-btn:has-text("Seal")');
+  await win.waitForSelector('.lib-picker .lib-pick');
+  await win.click('.lib-picker .lib-pick:has-text("RECEIVED")');
+  p = await at(0, 120, 640);
+  await win.mouse.move(p.x - 20, p.y);
+  await win.mouse.click(p.x, p.y);
+  await settle();
+  assert.ok(await win.evaluate(() => Viewer.doc.annotsAt(0).some((a) => a.type === 'stamp' && a.text === 'RECEIVED' && /MV Digital Tools/.test(a.sub))), 'saved stamp placed');
+  log('saves signatures, seals and stamps to a library, places them, exports and imports it');
+
   // ---- text on the rotated page ----
   await win.evaluate(() => { setTool('select'); goToPage(2); });
   await settle(600);

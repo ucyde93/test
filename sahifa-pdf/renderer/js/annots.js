@@ -988,7 +988,7 @@ function renderContextBar() {
     if (t === 'redact') bar.append(el('button', { class: 'btn btn-danger', onclick: () => App.run('apply-redactions') }, 'Apply Redactions'));
     return;
   }
-  const title = a ? ({ text: 'Text', rect: 'Rectangle', ellipse: 'Ellipse', line: a.arrow ? 'Arrow' : 'Line', ink: 'Drawing', highlight: 'Highlight', underline: 'Underline', strike: 'Strikethrough', note: 'Note', symbol: 'Mark', stamp: 'Stamp', image: a.role === 'signature' ? 'Signature' : a.role === 'initials' ? 'Initials' : 'Image', whiteout: 'White-out', redact: 'Redaction' }[a.type] || 'Item') : null;
+  const title = a ? ({ text: 'Text', rect: 'Rectangle', ellipse: 'Ellipse', line: a.arrow ? 'Arrow' : 'Line', ink: 'Drawing', highlight: 'Highlight', underline: 'Underline', strike: 'Strikethrough', note: 'Note', symbol: 'Mark', stamp: 'Stamp', image: a.role === 'signature' ? 'Signature' : a.role === 'initials' ? 'Initials' : a.role === 'seal' ? 'Seal' : 'Image', whiteout: 'White-out', redact: 'Redaction' }[a.type] || 'Item') : null;
   if (title) bar.append(el('span', { class: 'cb-title' }, title));
 
   switch (group) {

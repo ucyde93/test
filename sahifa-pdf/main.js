@@ -358,6 +358,21 @@ async function welcomePdfPath() {
   return file;
 }
 
+// ---------- signatures, seals and stamps library ----------
+const libraryFile = () => userFile('library.json');
+ipcMain.handle('library-get', async () => {
+  const data = await readJson(libraryFile(), null);
+  return data && Array.isArray(data.items) ? data.items : null;
+});
+ipcMain.handle('library-set', async (_e, items) => {
+  if (!Array.isArray(items)) throw new Error('Invalid library');
+  const tmp = libraryFile() + '.tmp';
+  await fs.mkdir(path.dirname(tmp), { recursive: true });
+  await fs.writeFile(tmp, JSON.stringify({ format: 'sahifa-library', version: 1, items }));
+  await fs.rename(tmp, libraryFile());
+  return true;
+});
+
 ipcMain.handle('default-status', () => defaultApp.status());
 ipcMain.handle('default-set', async (_e, { via } = {}) => {
   const res = await defaultApp.makeDefault({ welcomePdf: await welcomePdfPath(), via });

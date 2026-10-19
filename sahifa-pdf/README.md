@@ -16,6 +16,7 @@ The interface uses a light "liquid glass" design: frosted translucent panels ove
 | **Comment** | Highlight, underline and strike out selected text (or any area), sticky notes (saved as real PDF comments that Adobe Reader shows), text boxes, pen, rectangle, ellipse, line, arrow, stamps (Approved, Draft, Confidential, custom…), comments panel |
 | **Edit** | Edit existing text (click a line, type the new text; font, size and color are matched), add text in any language including Arabic, add images, white-out, watermarks, page numbers / header & footer, crop pages, document title/author/keywords, attach files |
 | **Fill & Sign** | Fill PDF forms (text, checkboxes, radio buttons, dropdowns, lists), create new form fields, signatures and initials you can **type** (4 handwriting styles), **draw** or **upload** (paper background removed automatically), saved for reuse, check/cross/dot marks, date stamp, flatten |
+| **Signatures & seals library** | Save any number of signatures and initials (named, with a default), design company seals (round or rectangular rubber-stamp style with curved company name, center text, automatic date and ink texture), add a seal from a photo or scan of your real stamp, save custom text stamps, place any of them with one click, and export/import the library to move it between computers or share it with colleagues |
 | **Digital IDs** | Certificate-based signatures (PKCS#7, the same kind Adobe uses). Create your own digital ID or import a `.pfx`/`.p12` from your organization; optional visible signature box |
 | **Organize** | Drag-and-drop page reordering, rotate, delete, duplicate, insert blank pages, insert/merge other PDFs, images to PDF, extract pages, split by page count or ranges |
 | **Protect** | AES-256 password encryption with permissions (printing, copying, editing…), open password-protected PDFs, **true redaction** (marked content is removed from the file, not just covered), remove hidden information (metadata, scripts, attachments) |
@@ -86,6 +87,7 @@ sahifa-pdf/
 │   ├── js/viewer.js     Page rendering (pdf.js), text layer, forms, search
 │   ├── js/annots.js     Annotation tools and editing
 │   ├── js/dialogs.js    Signature pad, stamps, watermark, password, digital ID dialogs
+│   ├── js/library.js    Signatures & seals library, seal designer, quick picker
 │   ├── js/organize.js   Page organizer
 │   └── js/app.js        Ribbon, tabs, sidebar, commands, shortcuts
 └── test/e2e.js          End-to-end test that drives the real app
