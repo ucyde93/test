@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' 'unsafe-inline' file:; img-src 'self' file: data: blob:; font-src 'self' file: data: blob:; worker-src 'self' file: blob:; connect-src 'self' file: data: blob:; object-src 'none'; base-uri 'none'">
+  <title>Sahifa PDF</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="no-doc">
+  <div id="app">
+    <header id="topbar">
+      <div class="brand" aria-label="Sahifa PDF">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M8 3h11l6 6v18a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" class="bm-page"/>
+          <path d="M19 3v6h6" class="bm-fold"/>
+          <path d="M10.5 21c2.5-.4 3.5-5.5 5.2-5.5 1.6 0 .2 4.6 1.8 4.6 1.2 0 1.7-2.2 3-2.2" class="bm-ink"/>
+        </svg>
+        <span class="brand-name">Sahifa</span>
+      </div>
+      <nav id="docTabs" role="tablist" aria-label="Open documents"></nav>
+      <div class="find">
+        <span id="searchIcon" class="find-icon"></span>
+        <input id="findInput" type="search" placeholder="Find in document" aria-label="Find in document" autocomplete="off">
+        <span id="findCount" class="find-count" aria-live="polite"></span>
+        <button id="findPrev" class="icon-btn" aria-label="Previous result" title="Previous (Shift+Enter)"></button>
+        <button id="findNext" class="icon-btn" aria-label="Next result" title="Next (Enter)"></button>
+      </div>
+      <button id="helpBtn" class="icon-btn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (F1)"></button>
+      <button id="themeBtn" class="icon-btn" aria-label="Change theme"></button>
+    </header>
+
+    <nav id="ribbonNav" role="tablist" aria-label="Tool groups"></nav>
+    <div id="ribbon" role="toolbar" aria-label="Tools"></div>
+    <div id="contextBar" role="toolbar" aria-label="Properties"></div>
+
+    <main id="workspace">
+      <aside id="sidebar" hidden>
+        <div id="sideTabs" role="tablist" aria-label="Sidebar"></div>
+        <div id="sidePanel"></div>
+      </aside>
+      <section id="stage">
+        <div id="banner" hidden></div>
+        <div id="welcome">
+          <div class="w-inner">
+            <p class="w-kicker">Free PDF reader &amp; editor · works offline</p>
+            <h1>Open a PDF to read, fill, sign and edit it.</h1>
+            <div class="w-drop">
+              <button id="wOpen" class="btn btn-primary btn-lg">Open PDF</button>
+              <span class="muted">or drop files anywhere in this window</span>
+            </div>
+            <div id="wQuick" class="w-quick-row"></div>
+            <p id="wDesktopNote" class="w-note" hidden>You are using the browser preview. Install the desktop app for saving in place, digital IDs and opening PDFs from your file manager.</p>
+            <div id="recentWrap" hidden>
+              <h2 class="w-h2">Recent files</h2>
+              <ul id="recentList" class="recent"></ul>
+            </div>
+            <dl class="w-features">
+              <div><dt>Read</dt><dd>Thumbnails, bookmarks, search, night mode, read aloud, presentation mode</dd></div>
+              <div><dt>Comment</dt><dd>Highlight, underline, sticky notes, pen, shapes, stamps</dd></div>
+              <div><dt>Edit</dt><dd>Change existing text, add text and images, white-out, watermarks, page numbers</dd></div>
+              <div><dt>Fill &amp; Sign</dt><dd>Fill forms, draw or type your signature, certificate-based digital IDs</dd></div>
+              <div><dt>Organize</dt><dd>Reorder, rotate, delete, insert, merge, split, extract, crop pages</dd></div>
+              <div><dt>Protect</dt><dd>AES-256 passwords, true redaction, remove hidden information</dd></div>
+            </dl>
+          </div>
+        </div>
+        <div id="viewer" data-mode="select" hidden>
+          <div id="pages"></div>
+        </div>
+        <div id="organizer" hidden></div>
+      </section>
+    </main>
+
+    <footer id="statusbar">
+      <div class="sb-left">
+        <button id="sbSidebar" class="icon-btn"></button>
+        <span class="sb-sep"></span>
+        <button id="sbFirst" class="icon-btn"></button>
+        <button id="sbPrev" class="icon-btn"></button>
+        <input id="pageInput" class="sb-page" type="text" inputmode="numeric" aria-label="Page number">
+        <span id="pageCount" class="muted"></span>
+        <button id="sbNext" class="icon-btn"></button>
+        <button id="sbLast" class="icon-btn"></button>
+      </div>
+      <div class="sb-mid">
+        <button id="sbZoomOut" class="icon-btn"></button>
+        <button id="zoomLabel" class="sb-zoom" title="Set zoom" aria-label="Zoom level"></button>
+        <button id="sbZoomIn" class="icon-btn"></button>
+        <button id="sbFitWidth" class="icon-btn"></button>
+        <button id="sbFitPage" class="icon-btn"></button>
+        <span class="sb-sep"></span>
+        <button id="sbNight" class="icon-btn"></button>
+      </div>
+      <div class="sb-right"><span id="docState" class="muted" aria-live="polite"></span></div>
+    </footer>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="busy" hidden><div class="busy-card"><span class="spinner" aria-hidden="true"></span><span id="busyLabel">Working…</span></div></div>
+  <div id="dropHint" aria-hidden="true"><div>Drop to open</div></div>
+  <div id="printRoot"></div>
+
+  <script src="../node_modules/pdfjs-dist/build/pdf.min.js"></script>
+  <script src="../node_modules/@cantoo/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/host.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/viewer.js"></script>
+  <script src="js/annots.js"></script>
+  <script src="js/dialogs.js"></script>
+  <script src="js/organize.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

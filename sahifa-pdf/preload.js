@@ -1,0 +1,26 @@
+'use strict';
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('sahifaHost', {
+  isDesktop: true,
+  platform: process.platform,
+  openDialog: (opts) => ipcRenderer.invoke('open-dialog', opts),
+  readFile: (p) => ipcRenderer.invoke('read-file', p),
+  saveFile: (opts) => ipcRenderer.invoke('save-file', opts),
+  saveMany: (opts) => ipcRenderer.invoke('save-many', opts),
+  recentGet: () => ipcRenderer.invoke('recent-get'),
+  showInFolder: (p) => ipcRenderer.invoke('show-in-folder', p),
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  appInfo: () => ipcRenderer.invoke('app-info'),
+  setDirty: (dirty) => ipcRenderer.send('set-dirty', dirty),
+  setTitle: (title) => ipcRenderer.send('set-title', title),
+  idsList: () => ipcRenderer.invoke('ids-list'),
+  idsCreate: (opts) => ipcRenderer.invoke('ids-create', opts),
+  idsImport: (opts) => ipcRenderer.invoke('ids-import', opts),
+  idsDelete: (id) => ipcRenderer.invoke('ids-delete', id),
+  idsExport: (id) => ipcRenderer.invoke('ids-export', id),
+  digitalSign: (opts) => ipcRenderer.invoke('digital-sign', opts),
+  onMenu: (cb) => ipcRenderer.on('menu', (_e, cmd, arg) => cb(cmd, arg)),
+  onOpenPaths: (cb) => ipcRenderer.on('open-paths', (_e, paths) => cb(paths)),
+  rendererReady: () => ipcRenderer.send('renderer-ready'),
+});

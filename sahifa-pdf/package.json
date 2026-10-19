@@ -1,0 +1,123 @@
+{
+  "name": "sahifa-pdf",
+  "version": "1.0.0",
+  "description": "Free, offline PDF reader and editor: read, comment, fill, sign, edit, organize and protect PDFs.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/e2e.js",
+    "dist": "electron-builder --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:linux": "electron-builder --linux --publish never"
+  },
+  "author": "Sahifa PDF contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@cantoo/pdf-lib": "^2.11.1",
+    "@fontsource/allura": "^5.3.0",
+    "@fontsource/dancing-script": "^5.3.0",
+    "@fontsource/great-vibes": "^5.3.0",
+    "@fontsource/sacramento": "^5.3.0",
+    "@signpdf/placeholder-pdf-lib": "^3.3.0",
+    "@signpdf/signer-p12": "^3.3.0",
+    "@signpdf/signpdf": "^3.3.0",
+    "node-forge": "^1.4.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^3.11.174"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "playwright-core": "^1.56.1"
+  },
+  "productName": "Sahifa PDF",
+  "private": true,
+  "homepage": "https://github.com/ucyde93/test/tree/main/sahifa-pdf",
+  "build": {
+    "appId": "app.sahifa.pdf",
+    "productName": "Sahifa PDF",
+    "copyright": "Free software under the MIT License",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**/*",
+      "renderer/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "pdf",
+        "name": "PDF Document",
+        "description": "PDF Document",
+        "mimeType": "application/pdf",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Sahifa PDF",
+      "artifactName": "Sahifa-PDF-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Sahifa-PDF-Portable-${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "identity": null,
+      "artifactName": "Sahifa-PDF-${version}-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office",
+      "icon": "build/icon.png",
+      "artifactName": "Sahifa-PDF-${version}.${ext}",
+      "mimeTypes": [
+        "application/pdf"
+      ]
+    },
+    "publish": null
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ucyde93/test.git",
+    "directory": "sahifa-pdf"
+  }
+}
