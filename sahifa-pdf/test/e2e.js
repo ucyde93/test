@@ -295,19 +295,29 @@ async function main() {
   const libFile = path.join(OUT, 'backup.sahifalib');
   await stubSave(libFile);
   await win.click('.dlg-library .btn:has-text("Export")');
-  await win.waitForFunction(() => true);
-  await settle(500);
+  await win.fill('#backupPw', 'backup-pass-123');
+  await win.fill('#backupPw2', 'backup-pass-123');
+  await win.click('#backupExport');
+  for (let i = 0; i < 60 && !fs.existsSync(libFile); i++) await settle(250);
+  await settle(300);
   assert.ok(fs.existsSync(libFile), 'library exported');
+  assert.doesNotMatch(fs.readFileSync(libFile, 'utf8'), /data:image|Aminath/, 'backup is encrypted');
   await win.click('#libDone');
   await win.evaluate(() => Library.remove(Library.of('stamp')[0].id));
   await stubOpen([libFile]);
   await run('library');
   await win.waitForSelector('.dlg-library');
   await win.click('.dlg-library .btn:has-text("Import")');
-  await win.waitForFunction(() => Library.of('stamp').length === 1, null, { timeout: 10000 });
+  await win.fill('#importPw', 'wrong-password');
+  await win.click('#importGo');
+  await win.waitForSelector('.dlg-error:has-text("not correct")');
+  await win.fill('#importPw', 'backup-pass-123');
+  await win.click('#importGo');
+  await win.waitForFunction(() => Library.of('stamp').length === 1, null, { timeout: 15000 });
   await win.click('#libDone');
-  const saved = JSON.parse(fs.readFileSync(path.join(OUT, 'profile', 'library.json'), 'utf8'));
-  assert.deepEqual(saved.items.map((x) => x.kind).sort(), ['initials', 'seal', 'signature', 'stamp'], 'library stored on disk');
+  const outer = JSON.parse(fs.readFileSync(path.join(OUT, 'profile', 'library.json'), 'utf8'));
+  const saved = outer.os ? null : JSON.parse(outer.body);
+  if (saved) assert.deepEqual(saved.items.map((x) => x.kind).sort(), ['initials', 'seal', 'signature', 'stamp'], 'library stored on disk');
   // A saved stamp can be placed from the Seal picker.
   await win.click('#rail .rail-btn:has-text("Fill & Sign")');
   await win.click('#toolGroups .tb-btn:has-text("Seal")');
@@ -318,7 +328,42 @@ async function main() {
   await win.mouse.click(p.x, p.y);
   await settle();
   assert.ok(await win.evaluate(() => Viewer.doc.annotsAt(0).some((a) => a.type === 'stamp' && a.text === 'RECEIVED' && /MV Digital Tools/.test(a.sub))), 'saved stamp placed');
-  log('saves signatures, seals and stamps to a library, places them, exports and imports it');
+  log('saves signatures, seals and stamps to a library, places them, exports and imports an encrypted backup');
+
+  // ---- PIN lock ----
+  await run('library');
+  await win.waitForSelector('.dlg-library');
+  await win.click('#libSecurity');
+  await win.click('#pinTurnOn');
+  await win.fill('#pinNew', '123456');
+  await win.fill('#pinConfirm', '123456');
+  await win.click('#pinSave');
+  await win.waitForSelector('.dlg-error:has-text("too easy")');
+  await win.fill('#pinNew', '482916');
+  await win.fill('#pinConfirm', '482916');
+  await win.click('#pinSave');
+  await win.waitForSelector('#pinLockNow', { timeout: 20000 });
+  await shot('11-pin-on');
+  const locked1 = JSON.parse(fs.readFileSync(path.join(OUT, 'profile', 'library.json'), 'utf8'));
+  assert.equal(locked1.protection, 'pin');
+  const diskText = fs.readFileSync(path.join(OUT, 'profile', 'library.json'), 'utf8');
+  assert.doesNotMatch(diskText, /data:image|Aminath|RECEIVED|482916/, 'library file is encrypted and never contains the PIN');
+  await win.click('#pinLockNow');
+  await win.waitForFunction(() => !document.querySelector('.dlg-library'), null, { timeout: 10000 });
+  assert.equal(await win.evaluate(() => Library.items.length), 0, 'nothing decrypted stays in the window');
+  await win.click('#rail .rail-btn:has-text("Fill & Sign")');
+  await win.click('#toolGroups .tb-btn:has-text("Seal")');
+  await win.waitForSelector('#libPin');
+  await shot('12-unlock');
+  await win.fill('#libPin', '000000');
+  await win.click('#pinUnlock');
+  await win.waitForSelector('.dlg-error:has-text("Wrong PIN")', { timeout: 20000 });
+  await win.fill('#libPin', '482916');
+  await win.click('#pinUnlock');
+  await win.waitForSelector('.lib-picker .lib-pick', { timeout: 20000 });
+  assert.ok(await win.evaluate(() => Library.items.length) >= 4, 'library usable again after unlocking');
+  await win.keyboard.press('Escape');
+  log('PIN lock encrypts the library, locks on demand, rejects a wrong PIN and unlocks with the right one');
 
   // ---- text on the rotated page ----
   await win.evaluate(() => { setTool('select'); goToPage(2); });

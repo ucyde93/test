@@ -229,7 +229,7 @@ async function imageToSignature(data, removeBg) {
 }
 
 async function signatureDialog(kind = 'signature', { saveOnly = false } = {}) {
-  await Library.load();
+  if (!(await Library.load())) return null;
   const isInit = kind === 'initials';
   const label = isInit ? 'initials' : 'signature';
   let color = settingsGet('inkColor', INK_COLORS[0][0]);
@@ -362,7 +362,7 @@ const STAMPS = [
   ['VOID', '#b42318'], ['COPY', '#5b6472'], ['URGENT', '#c2410c'], ['COMPLETED', '#0b6e5c'],
 ];
 async function stampDialog() {
-  await Library.load();
+  if (!(await Library.load())) return null;
   let pick = STAMPS[0];
   let pickSaved = null;
   const saveIt = el('input', { type: 'checkbox', id: 'stampSaveLib' });

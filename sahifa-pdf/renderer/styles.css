@@ -701,3 +701,20 @@ body.presenting #viewer { scrollbar-width: none; }
 .sig-saved-name { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: #4f5973; }
 .stamp-choice.stamp-saved { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
 .stamp-choice.stamp-saved small { font: 600 10px var(--font-ui); letter-spacing: 0; opacity: .8; }
+
+/* ================= PIN lock ================= */
+.sec-chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--glass-strong); color: var(--ink-2); font-weight: 700; font-size: 12px; cursor: pointer; }
+.sec-chip:hover { border-color: var(--accent-line); color: var(--ink); }
+.sec-chip.on { background: var(--ok-soft); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.sec-status { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--line); background: var(--glass); }
+.sec-status > div { display: flex; flex-direction: column; gap: 2px; }
+.sec-status strong { font: 800 15px var(--font-display); }
+.sec-icon { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: var(--surface-3); color: var(--ink-3); flex: none; }
+.sec-status.on .sec-icon { background: var(--ok-soft); color: var(--ok); }
+.pin-hero { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; margin-bottom: 6px; color: #fff; background: var(--accent-grad); box-shadow: var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, .3); }
+.pin-input { font: 700 22px/1 var(--font-mono); letter-spacing: .45em; text-align: center; height: 50px; border-radius: 14px; }
+.pin-input::placeholder { letter-spacing: .3em; color: var(--ink-3); opacity: .6; }
+.dlg-pin .pin-input { width: 260px; margin-top: 10px; }
+.pin-wait { min-height: 18px; margin: 4px 0 0; font-size: 12.5px; color: var(--warn); }
+.pin-note { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--warn-soft); color: var(--ink); font-size: 12.5px; }
+.pin-note .icon { color: var(--warn); }

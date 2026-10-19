@@ -49,7 +49,7 @@ const MODES = [
     [C('new-from-images', 'From images', 'images'), C('new-blank', 'Blank PDF', 'blank'), C('merge-files', 'Merge files', 'merge')],
   ] },
 ];
-const NEEDS_DOC = (cmd) => !['open', 'new-from-images', 'new-blank', 'merge-files', 'shortcuts', 'about', 'theme', 'digital-ids', 'make-default', 'home', 'library', 'design-seal'].includes(cmd);
+const NEEDS_DOC = (cmd) => !['open', 'new-from-images', 'new-blank', 'merge-files', 'shortcuts', 'about', 'theme', 'digital-ids', 'make-default', 'home', 'library', 'design-seal', 'library-security', 'library-lock'].includes(cmd);
 
 // ---------- rail & toolbar ----------
 function setMode(id) {

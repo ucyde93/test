@@ -115,7 +115,7 @@ function createWindow() {
       win.close();
     }
   });
-  win.on('closed', () => { win = null; rendererReady = false; });
+  win.on('closed', () => { win = null; rendererReady = false; if (secureLib) secureLib.lock(); });
   // After the user confirms the default app in Windows Settings or the Open With
   // dialog, they come back to this window: re-check and tell the page.
   win.on('focus', async () => {
@@ -236,6 +236,10 @@ async function buildMenu() {
         item('Add Page Numbers / Header & Footer…', 'header-footer'),
         item('Edit Document Info…', 'metadata'),
         item('Attach a File…', 'attach'),
+        { type: 'separator' },
+        item('My Signatures & Seals…', 'library'),
+        item('Signatures & Seals Privacy (PIN Lock)…', 'library-security'),
+        item('Lock Signatures & Seals', 'library-lock', 'CmdOrCtrl+Shift+L'),
       ],
     },
     {
@@ -358,20 +362,47 @@ async function welcomePdfPath() {
   return file;
 }
 
-// ---------- signatures, seals and stamps library ----------
-const libraryFile = () => userFile('library.json');
-ipcMain.handle('library-get', async () => {
-  const data = await readJson(libraryFile(), null);
-  return data && Array.isArray(data.items) ? data.items : null;
-});
-ipcMain.handle('library-set', async (_e, items) => {
-  if (!Array.isArray(items)) throw new Error('Invalid library');
-  const tmp = libraryFile() + '.tmp';
-  await fs.mkdir(path.dirname(tmp), { recursive: true });
-  await fs.writeFile(tmp, JSON.stringify({ format: 'sahifa-library', version: 1, items }));
-  await fs.rename(tmp, libraryFile());
-  return true;
-});
+// ---------- signatures, seals and stamps library (encrypted) ----------
+const { SecureLibrary } = require('./lib/secure-library');
+let secureLib = null;
+let autoLockTimer = null;
+const lib = () => {
+  if (!secureLib) secureLib = new SecureLibrary({ dir: app.getPath('userData'), safeStorage: require('electron').safeStorage });
+  return secureLib;
+};
+async function lockLibrary(reason) {
+  if (!secureLib || !secureLib.key) return;
+  secureLib.lock();
+  clearTimeout(autoLockTimer);
+  if (win) win.webContents.send('library-locked', reason);
+}
+async function armAutoLock() {
+  clearTimeout(autoLockTimer);
+  if (!secureLib || !secureLib.key) return;
+  const { autoLockMinutes } = await secureLib.readState();
+  if (autoLockMinutes > 0) autoLockTimer = setTimeout(() => lockLibrary('idle'), autoLockMinutes * 60 * 1000);
+}
+// Errors cross IPC as plain messages; prefix the code so the page can react to it.
+const libCall = (fn) => async (...args) => {
+  try { return await fn(...args); } catch (e) { throw new Error(`${e.code || 'ERROR'}: ${e.message}`); }
+};
+ipcMain.handle('library-status', libCall(() => lib().status()));
+ipcMain.handle('library-get', libCall(async () => { const items = await lib().getItems(); armAutoLock(); return items; }));
+ipcMain.handle('library-set', libCall(async (_e, items) => { await lib().setItems(items); armAutoLock(); return true; }));
+ipcMain.handle('library-unlock', libCall(async (_e, pin) => { const r = await lib().unlock(String(pin || '')); if (r.ok) armAutoLock(); return r; }));
+ipcMain.handle('library-lock', libCall(() => lockLibrary('manual')));
+ipcMain.handle('library-set-pin', libCall(async (_e, o) => { await lib().setPin(o || {}); armAutoLock(); return true; }));
+ipcMain.handle('library-remove-pin', libCall(async (_e, o) => { await lib().removePin(o || {}); return true; }));
+ipcMain.handle('library-wipe-option', libCall((_e, on) => lib().setWipeAfter(on)));
+ipcMain.handle('library-auto-lock', libCall(async (_e, minutes) => { await lib().setAutoLock(minutes); armAutoLock(); return true; }));
+ipcMain.handle('library-reset', libCall(() => lib().reset()));
+ipcMain.handle('library-export', libCall(async (_e, { password } = {}) => {
+  const items = await lib().getItems();
+  const data = password ? await SecureLibrary.encryptBackup(items, password) : { format: 'sahifa-library', version: 1, app: 'Sahifa PDF by MV Digital Tools', items };
+  return new Uint8Array(Buffer.from(JSON.stringify(data)));
+}));
+ipcMain.handle('library-decrypt-backup', libCall(async (_e, { data, password }) => SecureLibrary.decryptBackup(JSON.parse(Buffer.from(data).toString('utf8')), password)));
+ipcMain.on('library-activity', () => armAutoLock());
 
 ipcMain.handle('default-status', () => defaultApp.status());
 ipcMain.handle('default-set', async (_e, { via } = {}) => {
@@ -438,6 +469,8 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', (_e, argv) => openPaths(pdfPathsFromArgv(argv.slice(1))));
   app.on('open-file', (e, p) => { e.preventDefault(); openPaths([p]); });
   app.whenReady().then(() => {
+    const { powerMonitor } = require('electron');
+    for (const ev of ['lock-screen', 'suspend', 'user-did-resign-active']) powerMonitor.on(ev, () => lockLibrary(ev));
     pendingPaths.push(...pdfPathsFromArgv(process.argv.slice(1)));
     buildMenu();
     createWindow();

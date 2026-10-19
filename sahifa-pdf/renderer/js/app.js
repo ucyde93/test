@@ -337,6 +337,8 @@ App.run = async (cmd) => {
       case 'initials': return signCommand('initials');
       case 'seal': return sealCommand();
       case 'library': return libraryManager();
+      case 'library-security': return securityDialog();
+      case 'library-lock': return Host.libraryLock();
       case 'design-seal': return sealDesigner();
       case 'stamp': {
         const st = await stampDialog();
