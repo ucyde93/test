@@ -468,6 +468,17 @@ function focusHit(n) {
 }
 
 // ---------- thumbnails ----------
+const thumbImages = new Map();
+function thumbImage(src) {
+  if (!thumbImages.has(src)) {
+    if (thumbImages.size > 50) thumbImages.clear();
+    const img = new Image();
+    img.src = src;
+    thumbImages.set(src, img.decode().then(() => img));
+  }
+  return thumbImages.get(src);
+}
+
 async function renderThumb(doc, i, canvas, width) {
   const page = await doc.pdf.getPage(i + 1);
   const vp1 = page.getViewport({ scale: 1 });
@@ -487,6 +498,10 @@ async function renderThumb(doc, i, canvas, width) {
   const s = vp.width / vp1.width;
   for (const a of list) {
     const b = annotBBox(a);
+    if (a.src) { // signatures, seals and images: show the picture itself
+      const img = await thumbImage(a.src).catch(() => null);
+      if (img) { ctx.globalAlpha = a.opacity ?? 1; ctx.drawImage(img, b.x * s, b.y * s, b.w * s, b.h * s); continue; }
+    }
     ctx.globalAlpha = a.type === 'highlight' ? 0.4 : 1;
     ctx.fillStyle = a.type === 'whiteout' ? (a.fill || '#fff') : a.type === 'redact' ? '#000' : (a.color || a.stroke || '#1f4fd1');
     if (['whiteout', 'redact', 'highlight'].includes(a.type)) ctx.fillRect(b.x * s, b.y * s, b.w * s, b.h * s);

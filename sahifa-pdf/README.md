@@ -113,6 +113,8 @@ sahifa-pdf/
 │   ├── js/library.js    Signatures & seals library, seal designer, quick picker
 │   ├── js/organize.js   Page organizer
 │   └── js/app.js        Ribbon, tabs, sidebar, commands, shortcuts
+├── scripts/screenshots.js  Website screenshots from the real app (npm run screenshots)
+├── website-kit/         Screenshots, icon and page text for the website
 ├── test/secure-library.test.js  Security tests for the encrypted library
 └── test/e2e.js          End-to-end test that drives the real app
 ```
