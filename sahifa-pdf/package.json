@@ -1,12 +1,12 @@
 {
   "name": "sahifa-pdf",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Sahifa PDF",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node test/secure-library.test.js && node test/e2e.js",
-    "test:unit": "node test/secure-library.test.js",
+    "test": "node test/version.test.js && node test/secure-library.test.js && node test/e2e.js",
+    "test:unit": "node test/version.test.js && node test/secure-library.test.js",
     "test:e2e": "node test/e2e.js",
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win --publish never",

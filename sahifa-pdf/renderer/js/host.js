@@ -3,6 +3,9 @@
    renderer is opened in a plain browser (handy for development) a fallback
    with file inputs and downloads is used instead. */
 
+// Version shown by the browser build. Kept equal to package.json by test/version.test.js.
+const WEB_APP_VERSION = '1.2.1';
+
 function browserDownload(data, name, mime = 'application/pdf') {
   const url = URL.createObjectURL(new Blob([data], { type: mime }));
   const a = el('a', { href: url, download: name });
@@ -48,7 +51,7 @@ const Host = window.sahifaHost || {
   async recentGet() { return []; },
   async showInFolder() {},
   async openExternal(url) { window.open(url, '_blank', 'noopener'); },
-  async appInfo() { return { version: '1.0.0', platform: 'web' }; },
+  async appInfo() { return { version: WEB_APP_VERSION, platform: 'web' }; },
   setDirty() {},
   setTitle(t) { document.title = t; },
   async idsList() { return []; },

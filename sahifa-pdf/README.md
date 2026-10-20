@@ -28,11 +28,11 @@ Undo/redo covers every change. Your edits stay editable until you close the docu
 ## Install
 
 ### Download an installer
-Installers are built automatically by GitHub Actions for every change (see the **Actions** tab → *Sahifa PDF* → *Artifacts*). Pushing a tag such as `sahifa-v1.0.0` publishes them as a GitHub Release.
+Download the latest version from the [Releases page](https://github.com/ucyde93/sahifa-pdf/releases/latest) or from [mvdigital.tools/sahifa-pdf](https://mvdigital.tools/sahifa-pdf/). Each release lists SHA-256 checksums in `SHA256SUMS.txt`.
 
 - **Windows:** `Sahifa-PDF-Setup-x.y.z.exe` is a standard installation wizard (license page, choice of folder, Start Menu folder *MV Digital Tools*, desktop shortcut, uninstaller in *Apps & features*). `Sahifa-PDF-Portable-x.y.z.exe` runs without installing. The files are not code-signed yet, so Windows SmartScreen may show *More info → Run anyway* until you sign them with a code-signing certificate.
-- **macOS 11 Big Sur or newer:** `Sahifa-PDF-x.y.z-arm64` for Apple Silicon (M1, M2, M3, M4…) or `-x64` for Intel Macs, as `.dmg` or `.zip` (Apple menu → *About This Mac* shows which chip you have).
-  1. Open the `.dmg` and drag **Sahifa PDF** into **Applications** (or double-click the `.zip` and drag the app into **Applications**).
+- **macOS 11 Big Sur or newer:** `Sahifa-PDF-x.y.z-arm64.zip` for Apple Silicon (M1, M2, M3, M4…) or `-x64.zip` for Intel Macs (Apple menu → *About This Mac* shows which chip you have).
+  1. Double-click the `.zip` and drag **Sahifa PDF** into **Applications**.
   2. Open it from Applications. The app is signed (ad-hoc) but not notarized with Apple, so the first time macOS says it cannot verify the developer. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. On macOS 14 and older you can instead right-click the app → **Open** → **Open**. This is needed only once.
   3. The first time you save a signature, macOS may ask to let Sahifa PDF use its key in your Keychain. Choose **Always Allow**.
 

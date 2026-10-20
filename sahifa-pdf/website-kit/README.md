@@ -40,16 +40,18 @@ Or download single files from
 
 ## The installers
 
-The four installers (85 to 107 MB each) are too large for the git repository (GitHub's limit is 100 MB per file), so they are not in this kit. The planned home is a **GitHub Release** on this public repository, tag `sahifa-v1.2.0`, which gives permanent, fast download links:
+The installers are published as a GitHub Release on the public repository
+[ucyde93/sahifa-pdf](https://github.com/ucyde93/sahifa-pdf). Permanent download links for version 1.2.1:
 
 ```
-https://github.com/ucyde93/test/releases/download/sahifa-v1.2.0/Sahifa-PDF-Setup-1.2.0.exe
-https://github.com/ucyde93/test/releases/download/sahifa-v1.2.0/Sahifa-PDF-Portable-1.2.0.exe
-https://github.com/ucyde93/test/releases/download/sahifa-v1.2.0/Sahifa-PDF-1.2.0-arm64.zip
-https://github.com/ucyde93/test/releases/download/sahifa-v1.2.0/Sahifa-PDF-1.2.0-x64.zip
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/Sahifa-PDF-Setup-1.2.1.exe
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/Sahifa-PDF-Portable-1.2.1.exe
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/Sahifa-PDF-1.2.1-arm64.zip
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/Sahifa-PDF-1.2.1-x64.zip
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/SHA256SUMS.txt
 ```
 
-These links work only after the owner has created that release and attached the four files (the files were sent to the owner in the Sahifa PDF chat). Until then, check whether they respond before publishing the page, or keep the download buttons as "Coming soon". Hosting the files on the website itself is an alternative if the host allows files of this size.
+The releases page is https://github.com/ucyde93/sahifa-pdf/releases/latest.
 
 Before publishing anything live, show the owner a preview and get their go-ahead.
 

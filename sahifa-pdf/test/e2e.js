@@ -424,6 +424,14 @@ async function main() {
   await settle(500);
   await shot('04-organizer');
   await win.click('.org-bar .btn-primary');
+  // Opening and closing the organizer without changes keeps text selectable: the text
+  // layer must be rebuilt even though the zoom did not change.
+  await win.waitForFunction(() => Viewer.els[Viewer.current].querySelectorAll('.textLayer span').length > 0, null, { timeout: 15000 });
+  await settle(500);
+  await run('organize');
+  await win.waitForSelector('.org-card');
+  await win.click('.org-bar .btn-primary');
+  await win.waitForFunction(() => Viewer.els[Viewer.current].querySelectorAll('.textLayer span').length > 0, null, { timeout: 15000 });
   const out2 = path.join(OUT, 'organized.pdf');
   await saveAs(out2);
   const d2 = await readPdf(out2);

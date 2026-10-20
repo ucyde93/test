@@ -298,7 +298,10 @@ function applyScale(scale, keepPosition = true) {
     v.scrollTop = pe.offsetTop + anchor.f * pe.offsetHeight;
   }
   // The overlay is cheap to rebuild immediately; canvases follow via pump().
+  // The text, link and form layers are cleared here, so every page must be rebuilt
+  // even when the scale did not change (closing the organizer, resizing at fit width).
   Viewer.els.forEach((pe, i) => {
+    pe._key = null;
     pe.querySelector('.linkLayer').innerHTML = '';
     pe.querySelector('.formLayer').innerHTML = '';
     pe.querySelector('.textLayer').innerHTML = '';

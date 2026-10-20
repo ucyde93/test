@@ -1,6 +1,6 @@
 # Sahifa PDF: website content
 
-Ready-to-use text for the Sahifa PDF product page on mvdigital.tools. Adapt the wording to the site's voice; the facts below are accurate for version 1.2.0.
+Ready-to-use text for the Sahifa PDF product page on mvdigital.tools. Adapt the wording to the site's voice; the facts below are accurate for version 1.2.1.
 
 ---
 
@@ -14,7 +14,7 @@ Ready-to-use text for the Sahifa PDF product page on mvdigital.tools. Adapt the 
 
 **Buttons:** Download for Windows · Download for Mac (detect the visitor's system and highlight the matching one; link "Other downloads" to the full list)
 
-**Small print under the buttons:** Version 1.2.0 · Free forever · Windows 10/11 and macOS 11+
+**Small print under the buttons:** Version 1.2.1 · Free forever · Windows 10/11 and macOS 11+
 
 **Hero image:** `screenshots/02-signed-document.webp` (a signed agreement with a company seal)
 
@@ -65,24 +65,24 @@ A calm "liquid glass" design with a matching dark mode.
 
 ---
 
-## Downloads (version 1.2.0)
+## Downloads (version 1.2.1)
 
 | System | File | Size |
 | --- | --- | --- |
-| Windows 10 / 11, installer (recommended) | `Sahifa-PDF-Setup-1.2.0.exe` | 85.4 MB |
-| Windows 10 / 11, portable (no install) | `Sahifa-PDF-Portable-1.2.0.exe` | 85.0 MB |
-| Mac with Apple Silicon (M1, M2, M3, M4) | `Sahifa-PDF-1.2.0-arm64.zip` | 100.4 MB |
-| Mac with Intel processor | `Sahifa-PDF-1.2.0-x64.zip` | 106.5 MB |
+| Windows 10 / 11, installer (recommended) | `Sahifa-PDF-Setup-1.2.1.exe` | 85.4 MB |
+| Windows 10 / 11, portable (no install) | `Sahifa-PDF-Portable-1.2.1.exe` | 85.0 MB |
+| Mac with Apple Silicon (M1, M2, M3, M4) | `Sahifa-PDF-1.2.1-arm64.zip` | 100.4 MB |
+| Mac with Intel processor | `Sahifa-PDF-1.2.1-x64.zip` | 106.5 MB |
 
 Mac tip for visitors: open the Apple menu and choose About This Mac. It shows "Chip: Apple M…" (choose Apple Silicon) or "Processor: Intel" (choose Intel). Requires macOS 11 Big Sur or newer.
 
 **SHA-256 checksums** (optional, for people who want to verify their download):
 
 ```
-2000cea6c66518fb5bda639c97459d3db2741563479d194f9f73f026b82d1077  Sahifa-PDF-Setup-1.2.0.exe
-36cfcd5eae99cabee28bb64d46b5619fecc58669b0afdc709f6553f504c6a2d8  Sahifa-PDF-Portable-1.2.0.exe
-b50a6a2a988e413d9615b2129dbf1bd70e07e6834134d130432463e9863b8857  Sahifa-PDF-1.2.0-arm64.zip
-d54a9b163a45c9e1b969d7ecadb5b15625e7a5acfd49c8bfe07856849ef6d794  Sahifa-PDF-1.2.0-x64.zip
+43595a43ca7a29006a29e7497d3b900759d7b7162084bb6ba9565aad52f09b17  Sahifa-PDF-Setup-1.2.1.exe
+e3248af7e8f0fe8ea97062a0d17ad49b491c4c6050edf486bc1ccdb2b82fbdd9  Sahifa-PDF-Portable-1.2.1.exe
+9f4425b3cfc9405192ec26cab8cf07b799216d4fb0eddbb9e4d3a0fcf6f2c453  Sahifa-PDF-1.2.1-arm64.zip
+b19e4dfe34d35730ab35e14d3d9e0ba178b844974df25d72df065108f28cc576  Sahifa-PDF-1.2.1-x64.zip
 ```
 
 ---
@@ -90,7 +90,7 @@ d54a9b163a45c9e1b969d7ecadb5b15625e7a5acfd49c8bfe07856849ef6d794  Sahifa-PDF-1.2
 ## Installing (show near the download buttons, or as a small "Help installing" section)
 
 **Windows**
-1. Run `Sahifa-PDF-Setup-1.2.0.exe`.
+1. Run `Sahifa-PDF-Setup-1.2.1.exe`.
 2. If Windows shows "Windows protected your PC", click **More info**, then **Run anyway**. (This appears for new apps that are not yet code-signed. Sahifa PDF is safe and works fully offline.)
 3. Follow the installer. Sahifa PDF appears in the Start menu under *MV Digital Tools*.
 
