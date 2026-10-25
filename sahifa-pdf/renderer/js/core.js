@@ -688,14 +688,17 @@ async function buildPdf(doc, { flatten = false, encrypt = true, pages = null } =
     try { pdf.getForm().flatten(); } catch (e) { console.warn('flatten failed', e); }
   }
   if (pages) setPageOrder(pdf, pages.map((i) => libPages[i].ref));
-  if (encrypt && doc.protect && (doc.protect.userPassword || doc.protect.ownerPassword)) {
-    pdf.encrypt({
-      userPassword: doc.protect.userPassword || '',
-      ownerPassword: doc.protect.ownerPassword || doc.protect.userPassword,
-      permissions: doc.protect.permissions || {},
-    });
-  }
+  if (encrypt && hasProtection(doc)) applyProtection(pdf, doc.protect);
   return savePdf(pdf, { gc: true, keepAppearances: unicodeFields.length > 0 && !flatten });
+}
+
+const hasProtection = (doc) => !!(doc.protect && (doc.protect.userPassword || doc.protect.ownerPassword));
+function applyProtection(pdf, protect) {
+  pdf.encrypt({
+    userPassword: protect.userPassword || '',
+    ownerPassword: protect.ownerPassword || protect.userPassword,
+    permissions: protect.permissions || {},
+  });
 }
 
 // ---------- byte-level operations (all undoable) ----------

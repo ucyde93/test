@@ -481,6 +481,19 @@ App.run = async (cmd) => {
         if (res) toast(`Saved ${res.count} files`, 'ok');
         return;
       }
+      case 'compress': {
+        const level = await compressDialog(doc);
+        if (!level) return;
+        const before = doc.bytes.length;
+        const res = await busy('Compressing…', async () => compressPdfBytes(await buildPdf(doc, { encrypt: false }), COMPRESS_LEVELS[level], {
+          protect: hasProtection(doc) ? doc.protect : null,
+          onProgress: (i, n) => { if (n) $('#busyLabel').textContent = `Compressing images… ${Math.min(i + 1, n)} of ${n}`; },
+        }));
+        if (!(await compressResultDialog(before, res.bytes.length, res.images))) return;
+        const saved = await Host.saveFile({ data: res.bytes, path: doc.path, suggestedName: `${baseName(doc.name)}-compressed.pdf`, saveAs: true });
+        if (saved) toast(`Saved ${saved.name} (${fmtBytes(res.bytes.length)})`, 'ok');
+        return;
+      }
       case 'export-images': {
         const o = await exportImagesDialog(doc);
         if (!o) return;

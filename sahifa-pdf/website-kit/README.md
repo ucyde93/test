@@ -41,14 +41,14 @@ Or download single files from
 ## The installers
 
 The installers are published as a GitHub Release on the public repository
-[ucyde93/sahifa-pdf](https://github.com/ucyde93/sahifa-pdf). Permanent download links for version 1.2.1:
+[ucyde93/sahifa-pdf](https://github.com/ucyde93/sahifa-pdf). Permanent download links for version 1.3.0:
 
 ```
-https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/Sahifa-PDF-Setup-1.2.1.exe
-https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/Sahifa-PDF-Portable-1.2.1.exe
-https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/Sahifa-PDF-1.2.1-arm64.zip
-https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/Sahifa-PDF-1.2.1-x64.zip
-https://github.com/ucyde93/sahifa-pdf/releases/download/v1.2.1/SHA256SUMS.txt
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.3.0/Sahifa-PDF-Setup-1.3.0.exe
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.3.0/Sahifa-PDF-Portable-1.3.0.exe
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.3.0/Sahifa-PDF-1.3.0-arm64.zip
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.3.0/Sahifa-PDF-1.3.0-x64.zip
+https://github.com/ucyde93/sahifa-pdf/releases/download/v1.3.0/SHA256SUMS.txt
 ```
 
 The releases page is https://github.com/ucyde93/sahifa-pdf/releases/latest.

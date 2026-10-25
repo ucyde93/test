@@ -44,4 +44,47 @@ async function formPdf() {
   return pdf.save();
 }
 
-module.exports = { samplePdf, formPdf };
+/** A heavy PDF for the compress test: a high-quality photo (JPEG), a large image stored
+ *  with the PNG predictor (as many PDF writers do) next to real text, and an image with
+ *  transparency. `jpeg` and `png` are image bytes made by the app's own canvas. */
+async function heavyPdf({ jpeg, png }) {
+  const zlib = require('zlib');
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+
+  const p1 = pdf.addPage([595.28, 841.89]);
+  const photo = await pdf.embedJpg(jpeg);
+  p1.drawImage(photo, { x: 0, y: 0, width: 595.28, height: 841.89 });
+
+  // 1800x1800 RGB image with PNG "Sub" predictor rows, the way many PDF producers store images.
+  const W = 1800, H = 1800, rowLen = W * 3;
+  const rows = Buffer.alloc(H * (rowLen + 1));
+  for (let y = 0; y < H; y++) {
+    const o = y * (rowLen + 1);
+    rows[o] = 1; // Sub filter
+    let prev = [0, 0, 0];
+    for (let x = 0; x < W; x++) {
+      const n = (Math.sin(x * 0.37 + y * 0.11) * 40 + ((x * 7919 + y * 104729) % 23));
+      const px = [(x * 255 / W + n) & 255, (y * 255 / H + n) & 255, ((x + y) * 128 / W + n) & 255];
+      for (let c = 0; c < 3; c++) { rows[o + 1 + x * 3 + c] = (px[c] - prev[c]) & 255; }
+      prev = px;
+    }
+  }
+  const raw = pdf.context.stream(zlib.deflateSync(rows), {
+    Type: 'XObject', Subtype: 'Image', Width: W, Height: H, ColorSpace: 'DeviceRGB', BitsPerComponent: 8,
+    Filter: 'FlateDecode', DecodeParms: { Predictor: 15, Colors: 3, Columns: W, BitsPerComponent: 8 },
+  });
+  const rawRef = pdf.context.register(raw);
+  const p2 = pdf.addPage([595.28, 841.89]);
+  const name = p2.node.newXObject('Im', rawRef);
+  const { pushGraphicsState, popGraphicsState, concatTransformationMatrix, drawObject } = require('pdf-lib');
+  p2.pushOperators(pushGraphicsState(), concatTransformationMatrix(480, 0, 0, 480, 57, 300), drawObject(name), popGraphicsState());
+  p2.drawText('Compress test text stays selectable.', { x: 57, y: 240, size: 16, font });
+
+  const p3 = pdf.addPage([595.28, 841.89]);
+  const logo = await pdf.embedPng(png);
+  p3.drawImage(logo, { x: 97, y: 220, width: 400, height: 400 });
+  return pdf.save();
+}
+
+module.exports = { samplePdf, formPdf, heavyPdf };

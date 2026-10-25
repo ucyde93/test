@@ -170,6 +170,7 @@ async function buildMenu() {
         item('Save', 'save', 'CmdOrCtrl+S'),
         item('Save As…', 'save-as', 'CmdOrCtrl+Shift+S'),
         item('Save Flattened Copy…', 'save-flat'),
+        item('Compress (Reduce File Size)…', 'compress'),
         {
           label: 'Export',
           submenu: [

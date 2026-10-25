@@ -45,6 +45,7 @@ const MODES = [
     [C('digital-sign', 'Sign', 'certificate', 'Sign with a digital ID'), C('digital-ids', 'My IDs', 'key', 'Manage digital IDs')],
   ] },
   { id: 'convert', label: 'Convert', icon: 'convert', groups: [
+    [C('compress', 'Compress', 'compress', 'Reduce the file size')],
     [C('export-images', 'To images', 'exportImage'), C('export-text', 'To text', 'textFile'), C('extract', 'Extract pages', 'extract')],
     [C('new-from-images', 'From images', 'images'), C('new-blank', 'Blank PDF', 'blank'), C('merge-files', 'Merge files', 'merge')],
   ] },
@@ -277,7 +278,7 @@ const HOME_TOOLS = [
   { t: 'Redact', d: 'Permanently remove sensitive content', icon: 'redact', tint: '#334155', mode: 'protect', tool: 'redact' },
   { t: 'Digital ID', d: 'Sign with a certificate readers can verify', icon: 'certificate', tint: '#0f766e', mode: 'sign', cmd: 'digital-sign' },
   { t: 'Images to PDF', d: 'Turn photos and scans into a PDF', icon: 'images', tint: '#b45309', cmd: 'new-from-images', noDoc: true },
-  { t: 'Export images', d: 'Save pages as PNG or JPEG', icon: 'exportImage', tint: '#4338ca', mode: 'convert', cmd: 'export-images' },
+  { t: 'Compress PDF', d: 'Make files smaller for email and uploads', icon: 'compress', tint: '#4338ca', mode: 'convert', cmd: 'compress' },
   { t: 'Signatures & seals', d: 'Your saved signatures, company seals and stamps', icon: 'seal', tint: '#6d28d9', cmd: 'library', noDoc: true },
 ];
 

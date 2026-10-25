@@ -1,6 +1,6 @@
 # Sahifa PDF: website content
 
-Ready-to-use text for the Sahifa PDF product page on mvdigital.tools. Adapt the wording to the site's voice; the facts below are accurate for version 1.2.1.
+Ready-to-use text for the Sahifa PDF product page on mvdigital.tools. Adapt the wording to the site's voice; the facts below are accurate for version 1.3.0.
 
 ---
 
@@ -14,7 +14,7 @@ Ready-to-use text for the Sahifa PDF product page on mvdigital.tools. Adapt the 
 
 **Buttons:** Download for Windows · Download for Mac (detect the visitor's system and highlight the matching one; link "Other downloads" to the full list)
 
-**Small print under the buttons:** Version 1.2.1 · Free forever · Windows 10/11 and macOS 11+
+**Small print under the buttons:** Version 1.3.0 · Free forever · Windows 10/11 and macOS 11+
 
 **Hero image:** `screenshots/02-signed-document.webp` (a signed agreement with a company seal)
 
@@ -49,6 +49,9 @@ Keep any number of signatures, initials, seals and stamps in your personal libra
 Your saved signatures and seals are always encrypted on your computer. Add a 6 to 12 digit PIN and they are locked with AES-256 encryption. Sahifa locks itself when you step away, lock your screen or close the laptop, and slows down anyone guessing the PIN. You can even choose to erase the library after 10 wrong attempts.
 *Image:* `screenshots/06-pin-lock.webp`
 
+### Shrink big PDFs in seconds
+Scanned documents and photos make PDFs huge. Compress makes them small enough for email and upload forms, often 70 to 90% smaller, with three levels to choose from. Text stays sharp and selectable, and your original file is never changed: you save a compressed copy and see exactly how much smaller it is.
+
 ### Everything else you need from a PDF app
 - **Read:** fast scrolling, zoom, thumbnails, bookmarks, search, night mode, read aloud, presentation mode, tabs.
 - **Comment:** highlight, underline, strike out, sticky notes, drawings, shapes, arrows and stamps that other PDF readers can see.
@@ -65,24 +68,24 @@ A calm "liquid glass" design with a matching dark mode.
 
 ---
 
-## Downloads (version 1.2.1)
+## Downloads (version 1.3.0)
 
 | System | File | Size |
 | --- | --- | --- |
-| Windows 10 / 11, installer (recommended) | `Sahifa-PDF-Setup-1.2.1.exe` | 85.4 MB |
-| Windows 10 / 11, portable (no install) | `Sahifa-PDF-Portable-1.2.1.exe` | 85.0 MB |
-| Mac with Apple Silicon (M1, M2, M3, M4) | `Sahifa-PDF-1.2.1-arm64.zip` | 100.4 MB |
-| Mac with Intel processor | `Sahifa-PDF-1.2.1-x64.zip` | 106.5 MB |
+| Windows 10 / 11, installer (recommended) | `Sahifa-PDF-Setup-1.3.0.exe` | 85.4 MB |
+| Windows 10 / 11, portable (no install) | `Sahifa-PDF-Portable-1.3.0.exe` | 85.0 MB |
+| Mac with Apple Silicon (M1, M2, M3, M4) | `Sahifa-PDF-1.3.0-arm64.zip` | 100.4 MB |
+| Mac with Intel processor | `Sahifa-PDF-1.3.0-x64.zip` | 106.5 MB |
 
 Mac tip for visitors: open the Apple menu and choose About This Mac. It shows "Chip: Apple M…" (choose Apple Silicon) or "Processor: Intel" (choose Intel). Requires macOS 11 Big Sur or newer.
 
 **SHA-256 checksums** (optional, for people who want to verify their download):
 
 ```
-43595a43ca7a29006a29e7497d3b900759d7b7162084bb6ba9565aad52f09b17  Sahifa-PDF-Setup-1.2.1.exe
-e3248af7e8f0fe8ea97062a0d17ad49b491c4c6050edf486bc1ccdb2b82fbdd9  Sahifa-PDF-Portable-1.2.1.exe
-9f4425b3cfc9405192ec26cab8cf07b799216d4fb0eddbb9e4d3a0fcf6f2c453  Sahifa-PDF-1.2.1-arm64.zip
-b19e4dfe34d35730ab35e14d3d9e0ba178b844974df25d72df065108f28cc576  Sahifa-PDF-1.2.1-x64.zip
+b75e2aaa69cbddd6f4f5bfe7bcb37aa66e3b46657bd2bbf5e853639483dd8dba  Sahifa-PDF-Setup-1.3.0.exe
+85cb366f0dcf3c1782e6de9c6617d974fa52744a109ce227b5526167d9344910  Sahifa-PDF-Portable-1.3.0.exe
+48238e7c095b7523f7917b577c9120f18265f344426178c5379213cacd908ee7  Sahifa-PDF-1.3.0-arm64.zip
+588a77562fb7c738f96993344bb8205db132e18f18c8d07e430e6feb6416f570  Sahifa-PDF-1.3.0-x64.zip
 ```
 
 ---
@@ -90,7 +93,7 @@ b19e4dfe34d35730ab35e14d3d9e0ba178b844974df25d72df065108f28cc576  Sahifa-PDF-1.2
 ## Installing (show near the download buttons, or as a small "Help installing" section)
 
 **Windows**
-1. Run `Sahifa-PDF-Setup-1.2.1.exe`.
+1. Run `Sahifa-PDF-Setup-1.3.0.exe`.
 2. If Windows shows "Windows protected your PC", click **More info**, then **Run anyway**. (This appears for new apps that are not yet code-signed. Sahifa PDF is safe and works fully offline.)
 3. Follow the installer. Sahifa PDF appears in the Start menu under *MV Digital Tools*.
 

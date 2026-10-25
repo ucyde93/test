@@ -574,6 +574,48 @@ async function exportImagesDialog(doc) {
   return res ? { format: format.value, dpi: +dpi.value, pages: parseRange(range.value, doc.pageCount) } : null;
 }
 
+// ---------- compress ----------
+async function compressDialog(doc) {
+  let level = settingsGet('compressLevel', 'medium');
+  if (!COMPRESS_LEVELS[level]) level = 'medium';
+  const options = Object.entries(COMPRESS_LEVELS).map(([key, l]) => {
+    const radio = el('input', { type: 'radio', name: 'compressLevel', value: key, class: 'field-radio', checked: key === level });
+    radio.addEventListener('change', () => { level = key; });
+    return el('label', { class: 'compress-opt' }, radio,
+      el('span', { class: 'compress-opt-text' }, el('strong', {}, l.label), el('span', { class: 'muted' }, `${l.note} (${l.dpi} dpi images)`)));
+  });
+  const res = await dialog({
+    title: 'Compress PDF',
+    width: 500,
+    content: el('div', { class: 'stack' },
+      el('p', { class: 'dlg-text' }, `This document is ${fmtBytes(doc.bytes.length)}. Images are made smaller; text stays sharp and selectable. Your original file is not changed: you save a compressed copy.`),
+      el('div', { class: 'compress-opts', role: 'radiogroup', 'aria-label': 'Compression level' }, ...options)),
+    buttons: [{ label: 'Cancel', value: null }, { label: 'Compress', kind: 'primary', value: true }],
+  });
+  if (!res) return null;
+  settingsSet('compressLevel', level);
+  return level;
+}
+
+async function compressResultDialog(before, after, images) {
+  const saving = before > 0 ? Math.round((1 - after / before) * 100) : 0;
+  const good = saving >= 5;
+  return dialog({
+    title: good ? 'Compressed' : 'Already compact',
+    width: 460,
+    content: el('div', { class: 'stack' },
+      el('div', { class: 'compress-result' },
+        el('span', { class: 'compress-size muted' }, fmtBytes(before)),
+        icon('arrowRight', 18),
+        el('strong', { class: 'compress-size' }, fmtBytes(after)),
+        good ? el('span', { class: 'compress-badge' }, `${saving}% smaller`) : null),
+      el('p', { class: 'dlg-text' }, good
+        ? `${images ? `${images} image${images === 1 ? ' was' : 's were'} optimized and the` : 'The'} file structure was packed more tightly.`
+        : 'This PDF has little left to shrink, usually because it is mostly text or its images are already compressed. You can still save the copy.')),
+    buttons: [{ label: 'Cancel', value: null }, { label: 'Save compressed copy', kind: 'primary', value: true }],
+  });
+}
+
 async function cropDialog(i) {
   return dialog({
     title: 'Crop pages',

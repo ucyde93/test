@@ -4,7 +4,7 @@
    with file inputs and downloads is used instead. */
 
 // Version shown by the browser build. Kept equal to package.json by test/version.test.js.
-const WEB_APP_VERSION = '1.2.1';
+const WEB_APP_VERSION = '1.3.0';
 
 function browserDownload(data, name, mime = 'application/pdf') {
   const url = URL.createObjectURL(new Blob([data], { type: mime }));

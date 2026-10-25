@@ -21,6 +21,7 @@ The interface uses a light "liquid glass" design: frosted translucent panels ove
 | **Digital IDs** | Certificate-based signatures (PKCS#7, the same kind Adobe uses). Create your own digital ID or import a `.pfx`/`.p12` from your organization; optional visible signature box |
 | **Organize** | Drag-and-drop page reordering, rotate, delete, duplicate, insert blank pages, insert/merge other PDFs, images to PDF, extract pages, split by page count or ranges |
 | **Protect** | AES-256 password encryption with permissions (printing, copying, editing…), open password-protected PDFs, **true redaction** (marked content is removed from the file, not just covered), remove hidden information (metadata, scripts, attachments) |
+| **Compress** | Make PDFs much smaller for email and uploads: three levels (Light 200 dpi, Recommended 150 dpi, Strong 100 dpi), images are resized and re-encoded while text stays sharp and selectable; saves a compressed copy and shows exactly how much was saved |
 | **Convert** | Export pages as PNG/JPEG at up to 300 dpi, export text to `.txt`, create PDFs from images, blank PDFs |
 
 Undo/redo covers every change. Your edits stay editable until you close the document.
@@ -106,6 +107,7 @@ sahifa-pdf/
 ├── preload.js           Safe bridge between the window and the main process
 ├── lib/digital-sign.js  Digital ID creation and PKCS#7 signing (node-forge, @signpdf)
 ├── renderer/            The app UI (plain HTML/CSS/JS)
+│   ├── js/compress.js   Compress PDF (image resizing and re-encoding)
 │   ├── js/core.js       Document model, saving, page operations, redaction
 │   ├── js/viewer.js     Page rendering (pdf.js), text layer, forms, search
 │   ├── js/annots.js     Annotation tools and editing

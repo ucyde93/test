@@ -718,3 +718,15 @@ body.presenting #viewer { scrollbar-width: none; }
 .pin-wait { min-height: 18px; margin: 4px 0 0; font-size: 12.5px; color: var(--warn); }
 .pin-note { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--warn-soft); color: var(--ink); font-size: 12.5px; }
 .pin-note .icon { color: var(--warn); }
+
+/* ---------- compress ---------- */
+.compress-opts { display: grid; gap: 8px; }
+.compress-opt { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line, rgba(120, 130, 160, .25)); background: var(--glass-soft, rgba(255, 255, 255, .55)); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.compress-opt:hover { border-color: rgba(61, 109, 255, .45); }
+.compress-opt:has(input:checked) { border-color: #3d6dff; box-shadow: 0 0 0 3px rgba(61, 109, 255, .15); }
+.compress-opt .field-radio { margin-top: 3px; }
+.compress-opt-text { display: grid; gap: 2px; }
+.compress-opt-text .muted { font-size: 12.5px; }
+.compress-result { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 18px 12px; border-radius: 16px; background: var(--glass-soft, rgba(255, 255, 255, .55)); flex-wrap: wrap; }
+.compress-size { font-size: 22px; letter-spacing: -.01em; }
+.compress-badge { padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: #047857; background: rgba(16, 185, 129, .14); }

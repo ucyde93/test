@@ -675,6 +675,76 @@ async function main() {
   assert.equal(await win.evaluate(() => window.__printed), 4);
   log('prepares every page for printing');
 
+  // ---- compress ----
+  const heavyImgs = await win.evaluate(() => {
+    const c = document.createElement('canvas');
+    c.width = 2400; c.height = 3394;
+    const g = c.getContext('2d');
+    const grad = g.createLinearGradient(0, 0, c.width, c.height);
+    grad.addColorStop(0, '#1b4f72'); grad.addColorStop(1, '#f5b041');
+    g.fillStyle = grad; g.fillRect(0, 0, c.width, c.height);
+    for (let i = 0; i < 4000; i++) {
+      g.fillStyle = `hsla(${(i * 37) % 360},70%,${30 + (i % 50)}%,0.35)`;
+      g.beginPath(); g.arc((i * 7919) % c.width, (i * 104729) % c.height, 8 + (i % 60), 0, 7); g.fill();
+    }
+    const t = document.createElement('canvas');
+    t.width = 1600; t.height = 1600;
+    const h = t.getContext('2d');
+    for (let i = 0; i < 1500; i++) {
+      h.fillStyle = `hsla(${(i * 53) % 360},80%,50%,${(i % 10) / 10})`;
+      h.fillRect((i * 613) % 1600, (i * 1013) % 1600, 30 + (i % 90), 30 + (i % 70));
+    }
+    return { jpeg: c.toDataURL('image/jpeg', 0.95).split(',')[1], png: t.toDataURL('image/png').split(',')[1] };
+  });
+  const heavy = path.join(OUT, 'heavy.pdf');
+  fs.writeFileSync(heavy, await fixtures.heavyPdf({ jpeg: Buffer.from(heavyImgs.jpeg, 'base64'), png: Buffer.from(heavyImgs.png, 'base64') }));
+  await stubOpen([heavy]);
+  await run('open');
+  await win.waitForFunction(() => App.active && App.active.name === 'heavy.pdf' && Viewer.els[0] && Viewer.els[0]._key, null, { timeout: 30000 });
+  await run('compress');
+  await win.waitForSelector('.compress-opt');
+  await win.check('.compress-opt input[value="strong"]');
+  await win.click('.dlg-actions .btn-primary');
+  await win.waitForSelector('.compress-result', { timeout: 90000 });
+  await shot('13-compressed');
+  const smaller = path.join(OUT, 'heavy-compressed.pdf');
+  await stubSave(smaller);
+  await win.click('.dlg-actions .btn-primary');
+  for (let i = 0; i < 80 && !fs.existsSync(smaller); i++) await settle(250);
+  await settle(300);
+  const sizeBefore = fs.statSync(heavy).size, sizeAfter = fs.statSync(smaller).size;
+  assert.ok(sizeAfter < sizeBefore * 0.5, `compressed to under half (${sizeBefore} -> ${sizeAfter} bytes)`);
+  {
+    const { PDFName: N, PDFRawStream, PDFRef } = require('pdf-lib');
+    const cdoc = await PDFDocument.load(fs.readFileSync(smaller));
+    const ctx = cdoc.context;
+    const imgsOut = [];
+    for (const [, obj] of ctx.enumerateIndirectObjects()) {
+      if (obj instanceof PDFRawStream && obj.dict.get(N.of('Subtype')) === N.of('Image')) imgsOut.push(obj.dict);
+    }
+    const num = (d, k) => d.get(N.of(k)).asNumber();
+    const color = imgsOut.filter((d) => String(d.get(N.of('ColorSpace'))) !== '/DeviceGray');
+    assert.equal(color.length, 3, 'three page images');
+    const limit = Math.ceil((841.89 / 72) * 100);
+    for (const d of color) {
+      assert.equal(String(d.get(N.of('Filter'))), '/DCTDecode', 'images re-encoded as JPEG');
+      assert.ok(Math.max(num(d, 'Width'), num(d, 'Height')) <= limit, `image resized to the page at 100 dpi (${num(d, 'Width')}x${num(d, 'Height')})`);
+      const sm = d.get(N.of('SMask'));
+      if (sm instanceof PDFRef) {
+        const smd = ctx.lookup(sm).dict;
+        assert.deepEqual([num(smd, 'Width'), num(smd, 'Height')], [num(d, 'Width'), num(d, 'Height')], 'transparency resized with its image');
+      }
+    }
+    assert.ok(color.some((d) => d.get(N.of('SMask'))), 'transparency kept');
+    const ct = await readPdf(smaller);
+    assert.equal(ct.numPages, 3);
+    assert.match(await pageText(ct, 2), /Compress test text stays selectable/, 'text kept as text');
+  }
+  await stubOpen([smaller]);
+  await run('open');
+  await win.waitForFunction(() => App.active && App.active.name === 'heavy-compressed.pdf' && Viewer.els[0] && Viewer.els[0]._key, null, { timeout: 30000 });
+  log(`compresses a PDF to a smaller copy (${(sizeBefore / 1048576).toFixed(1)} MB -> ${(sizeAfter / 1048576).toFixed(1)} MB), keeping text and transparency`);
+
   // ---- theme & night mode render without errors ----
   await win.evaluate(() => { App.run('theme'); App.run('night'); });
   await settle(500);
